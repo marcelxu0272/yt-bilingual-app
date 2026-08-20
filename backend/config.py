@@ -53,16 +53,21 @@ VOCAB_LEVELS = {
     "advanced": "near-native (CEFR C2). Only highlight rare idioms, slang, or cultural references.",
 }
 
-# --- DeepSeek models. Prices are USD per 1M tokens and only drive the UI
+# --- DeepSeek models. Prices are CNY per 1M tokens and only drive the UI
 # estimate. Update them from https://api-docs.deepseek.com/quick_start/pricing
 # if the provider changes its rates.
+# We use peak-time, cache-miss input prices for a conservative estimate.
 MODEL_CATALOG = {
-    "deepseek-chat": {
-        "name": "DeepSeek Chat", "provider": "DeepSeek",
-        "in": 0.28, "out": 0.42, "quotaInfo": "默认 · 适合翻译、总结与结构化输出",
+    "deepseek-v4-flash": {
+        "name": "DeepSeek V4 Flash", "provider": "DeepSeek",
+        "in": 3.0, "out": 9.0, "quotaInfo": "默认 · 快速、高并发，适合长视频翻译",
+    },
+    "deepseek-v4-pro": {
+        "name": "DeepSeek V4 Pro", "provider": "DeepSeek",
+        "in": 9.0, "out": 27.0, "quotaInfo": "更高成本 · 仅在手动选择时使用",
     },
 }
-DEFAULT_MODEL = "deepseek-chat"
+DEFAULT_MODEL = "deepseek-v4-flash"
 
 
 def resolve_model(model: str | None) -> str:

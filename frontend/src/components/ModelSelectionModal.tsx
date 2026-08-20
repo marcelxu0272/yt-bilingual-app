@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Cpu, DollarSign, CheckCircle2 } from 'lucide-react';
+import { X, Cpu, CheckCircle2 } from 'lucide-react';
 
 export interface ModelOption {
     id: string;
@@ -34,7 +34,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
     onConfirm,
     estimationData
 }) => {
-    const [selectedModel, setSelectedModel] = React.useState<string>('deepseek-chat');
+    const [selectedModel, setSelectedModel] = React.useState<string>('deepseek-v4-flash');
 
     React.useEffect(() => {
         if (isOpen && estimationData && estimationData.models.length > 0) {
@@ -60,7 +60,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
                             选择 DeepSeek 模型
                         </h2>
                         <p className="text-sm text-zinc-400 mt-0.5">
-                            费用为整个视频的估算值
+                            人民币费用按高峰时段、缓存未命中保守估算
                         </p>
                     </div>
                     <button
@@ -129,8 +129,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1 text-[11px] font-medium tabular-nums text-zinc-100 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
-                                                <DollarSign className="w-3 h-3" />
-                                                {model.estimatedCost.toFixed(4)}
+                                                ¥{model.estimatedCost.toFixed(4)}
                                             </div>
                                         </div>
                                         <p className="text-sm text-zinc-400 flex items-center gap-1.5">
