@@ -4,10 +4,10 @@
 
 # Lingua Nova
 
-### Turn any YouTube video into an immersive English lesson.
+### 把任何 YouTube 视频，变成一堂沉浸式英语课。
 
-AI bilingual subtitles that stream in live · click any word for an instant dictionary · listening drills built in.<br/>
-Designed for Chinese learners. Built like Apple would.
+AI 双语字幕实时流式生成 · 点击任意单词即查词典 · 内置精听训练<br/>
+为中文学习者设计，用暖白纸张、墨色文字和克制动效减少长时间阅读的视觉负担。
 
 <br/>
 
@@ -15,139 +15,150 @@ Designed for Chinese learners. Built like Apple would.
 [![License](https://img.shields.io/github/license/huthvincent/yt-bilingual-app?style=for-the-badge&color=34C759)](LICENSE)
 ![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![DeepSeek](https://img.shields.io/badge/DeepSeek_API-4D6BFE?style=for-the-badge)
+![DeepSeek V4 Flash](https://img.shields.io/badge/DeepSeek_V4-Flash-4D6BFE?style=for-the-badge)
 
-[Demo](#see-it-in-action) · [On your phone](#learn-on-the-go) · [Quick Start](#-quick-start) · [中文文档](README_zh.md)
+[功能演示](#实际效果) · [手机端](#随时随地学习) · [快速开始](#-快速开始) · [模型选择](#模型选择)
 
 <br/>
 
-<img src="docs/images/hero.gif" alt="Lingua Nova home — living aurora, shimmering title, and a vocabulary-level axis" width="860" />
+<img src="docs/images/hero.gif" alt="Lingua Nova 首页与词汇水平轴" width="860" />
 
 </div>
 
 <br/>
 
-## Why Lingua Nova
+## 为什么是 Lingua Nova
 
-Most language apps make you study *their* content. Lingua Nova flips that: paste a link to **any YouTube video you actually want to watch**, and it becomes a complete lesson — synchronized bilingual subtitles, vocabulary highlighted *at your level*, a tap-to-define dictionary, and listening drills. The friction of looking things up disappears; only the input remains.
+大多数语言应用让你学*它们*准备的内容。Lingua Nova 反过来：粘贴一条**你真正想看的 YouTube 视频**链接，它就变成一堂完整的课——同步双语字幕、按你的水平高亮生词、点击即查的词典、随手可用的精听训练。查词与翻译的摩擦被彻底消除，剩下的只有输入。
 
 | | | |
 |:---:|:---:|:---:|
-| **⚡ Instant** | **🎯 Personal** | **🔁 Complete** |
-| English subtitles appear the moment they're fetched — translations stream in live while you watch. Stop anytime; it resumes where it left off. | Set your level on a single axis — Liftoff to Supernova — and the AI highlights only words *above* it. Reopen any video and continue from your last position. | Watch → look up → collect → drill → export to Anki. The whole learning loop, not just a player. |
+| **⚡ 即时** | **🎯 个性化** | **🔁 完整闭环** |
+| 英文字幕秒出，翻译边看边流式填充；随时中断，下次打开自动续译。 | 在一条轴上设定水平——Liftoff 到 Supernova——AI 只高亮超出水平的词；每个视频自动续播。 | 看 → 查 → 收藏 → 精听 → 导出 Anki。完整的学习闭环，不只是个播放器。 |
 
 <br/>
 
-## See it in action
+## 实际效果
 
-### A transcript that moves with the video
+### 跟着视频走的字幕
 
-The active sentence glides with playback like Apple Music lyrics — buttery even on a 90-minute podcast. Click any sentence to jump the video there. AI-picked vocabulary carries its Chinese gloss as ruby text above the word — visible at a glance, ignorable at speed.
+当前句像 Apple Music 歌词一样随播放平滑滑动——即使 90 分钟的播客也丝般顺滑。点击任意句子，视频立刻跳转。AI 选出的生词以 ruby 注音形式把中文释义放在单词上方——想看一眼就懂，不想看也不挡路。
 
 <div align="center">
-<img src="docs/images/learning.gif" alt="Synchronized bilingual transcript following video playback, with click-to-seek" width="860" />
+<img src="docs/images/learning.gif" alt="双语字幕跟随视频播放，点句即跳转" width="860" />
 </div>
 
 <br/>
 
-### Click any word. Any word.
+### 点击任何一个单词
 
-One click on any word in the transcript opens a dictionary card: IPA, part of speech, a context-aware Chinese gloss, an English definition, and an example sentence — with one-tap pronunciation and one-tap save to your vocabulary book. Definitions are cached on disk, so each word costs an API call exactly once, ever. Or flip on **dictation mode** to blur the English and check yourself by ear.
+字幕里的每个单词都可以点：音标、词性、贴合语境的中文释义、英文释义、例句，外加一键发音和一键加入生词本。释义在本地缓存——每个词的 API 成本一生只花一次。或者打开**听写模式**，把英文模糊，用耳朵核对自己。
 
 <table align="center">
 <tr>
 <td align="center" width="50%">
-<img src="docs/images/dictionary.gif" alt="Click-to-define dictionary with IPA and Chinese gloss" width="420" /><br/>
-<sub><b>Tap-to-define dictionary</b> — IPA · 释义 · TTS · 生词本</sub>
+<img src="docs/images/dictionary.gif" alt="点查词典：音标与中文释义" width="420" /><br/>
+<sub><b>点查词典</b> — 音标 · 释义 · 发音 · 生词本</sub>
 </td>
 <td align="center" width="50%">
-<img src="docs/images/dictation.gif" alt="Dictation mode blurs the English until you reveal it" width="420" /><br/>
-<sub><b>Dictation mode</b> — listen first, reveal to check yourself</sub>
+<img src="docs/images/dictation.gif" alt="听写模式：英文模糊，点击揭示" width="420" /><br/>
+<sub><b>听写模式</b> — 先听后看，点击核对</sub>
 </td>
 </tr>
 </table>
 
 <br/>
 
-## Learn on the go
+## 随时随地学习
 
-The interface is fully responsive — the same synced bilingual transcript, tap-to-define dictionary, and listening tools, sized for a phone. A companion Expo React Native client also ships in [`mobile/`](mobile).
+界面完全自适应——同样的同步双语字幕、点查词典与精听工具，为手机屏幕优化排布。仓库中还附带一个 Expo React Native 客户端（[`mobile/`](mobile)）。
 
 <div align="center">
-<img src="docs/images/mobile.gif" alt="Lingua Nova running on a phone — video on top, bilingual transcript scrolling below" width="300" />
+<img src="docs/images/mobile.gif" alt="Lingua Nova 手机端 — 视频在上，双语字幕在下滚动" width="300" />
 </div>
 
 <br/>
 
-## 🚀 Quick Start
+## 🚀 快速开始
 
-> **Prereqs:** Node 18+, Python 3.10+, and a [DeepSeek API key](https://platform.deepseek.com/api_keys).
+> **环境要求：** Node 18+、Python 3.10+、一个 [DeepSeek API key](https://platform.deepseek.com/api_keys)。
 
 ```bash
 git clone https://github.com/huthvincent/yt-bilingual-app.git
 cd yt-bilingual-app
 
-./setup.sh                       # installs frontend + backend deps
-cp .env.example .env             # then paste your DEEPSEEK_API_KEY
+./setup.sh                       # 安装前后端依赖
+cp .env.example .env             # 填入你的 DEEPSEEK_API_KEY
 
-./start_app.command              # macOS one-click (or run the two commands below)
+./start_app.command              # macOS 一键启动（或手动起两个服务，见下）
 ```
 
 <details>
-<summary>Manual start</summary>
+<summary>手动启动</summary>
 
 ```bash
-# terminal 1 — backend
+# 终端 1 — 后端
 cd backend && source venv/bin/activate && uvicorn main:app --port 8000
 
-# terminal 2 — frontend
+# 终端 2 — 前端
 cd frontend && npm run dev
 ```
 </details>
 
-Open **http://localhost:5173**, paste a YouTube link, set your level on the axis, and press **Start Learning**.
+打开 **http://localhost:5173**，粘贴 YouTube 链接，在轴上设定你的水平，点「Start Learning」。
 
-### Configuration
+### 配置项
 
-| Variable | Where | Purpose |
+| 变量 | 位置 | 用途 |
 |---|---|---|
-| `DEEPSEEK_API_KEY` | `.env` | **Required.** Translation, summaries, dictionary. |
-| `DEEPSEEK_BASE_URL` | `.env` | Optional OpenAI-compatible endpoint override. |
-| `WHISPER_MODEL` | `.env` | Whisper size for the no-captions ASR fallback (`base` default). |
-| `CORS_ORIGINS` | `.env` | Comma-separated allowed origins — set before deploying publicly. |
-| `API_AUTH_KEY` | `.env` | When set, every API call must send `X-API-Key`. Protects your DeepSeek quota on public deployments. |
-| `VITE_API_BASE` / `VITE_API_KEY` | frontend env | Point the web app at a remote backend / send its API key. |
-| `HISTORY_DIR` / `SUBTITLES_DIR` | env | Relocate the JSON cache / local-show subtitles. |
+| `DEEPSEEK_API_KEY` | `.env` | **必填。** 翻译、总结、词典。 |
+| `DEEPSEEK_BASE_URL` | `.env` | DeepSeek 的 OpenAI 兼容接口地址，默认 `https://api.deepseek.com`。 |
+| `WHISPER_MODEL` | `.env` | 无字幕 ASR 回退使用的 Whisper 模型大小（默认 `base`）。 |
+| `CORS_ORIGINS` | `.env` | 允许的跨域来源（逗号分隔）——公网部署前务必设置。 |
+| `API_AUTH_KEY` | `.env` | 设置后所有 API 调用必须携带 `X-API-Key`，保护你的 DeepSeek 配额。 |
+| `VITE_API_BASE` / `VITE_API_KEY` | 前端环境 | 让 Web 端指向远程后端 / 发送其 API key。 |
+| `HISTORY_DIR` / `SUBTITLES_DIR` | 环境变量 | 自定义 JSON 缓存 / 本地剧集字幕目录。 |
+
+### 模型选择
+
+应用接入 DeepSeek V4 的两个 API 模型，开始学习任务前可以在页面中选择：
+
+| 模型 | 用途 |
+|---|---|
+| `deepseek-v4-flash` | 默认模型，用于字幕翻译、视频总结和词典查询。 |
+| `deepseek-v4-pro` | 可选模型，需要时可在模型选择窗口中切换。 |
+
+模型名称和计费信息以 [DeepSeek API 官方文档](https://api-docs.deepseek.com/zh-cn/) 为准。本项目在前端显示的费用只是估算值，不会代替服务端账单。
 
 <br/>
 
-## 🗺 Roadmap
+## 🗺 路线图
 
-- [x] Progressive SSE pipeline with resume & self-healing translations
-- [x] Tap-to-define dictionary with IPA, TTS, and vocabulary book
-- [x] Dictation mode, sentence loop, playback speed, keyboard control
-- [x] Vocabulary highlighting on a Liftoff → Supernova level axis
-- [x] Anki / CSV export
-- [x] Whisper ASR fallback for caption-less videos
-- [ ] AI pronunciation assessment (speak the sentence, get scored)
-- [ ] In-app spaced-repetition review
-- [ ] Chrome extension — start a lesson from any YouTube page
-- [ ] Mobile parity with the streaming pipeline
+- [x] SSE 渐进式管线（断点续译 + 自动修复）
+- [x] 点查词典（音标 / 发音 / 生词本）
+- [x] 听写模式、单句循环、倍速、键盘操作
+- [x] Liftoff → Supernova 词汇水平轴高亮生词
+- [x] Anki / CSV 导出
+- [x] 无字幕视频的 Whisper 转写回退
+- [ ] AI 发音评测（跟读打分）
+- [ ] 应用内间隔重复复习
+- [ ] Chrome 扩展——在任意 YouTube 页面一键开课
+- [ ] 移动端接入流式管线
 
 <br/>
 
-## 🤝 Contributing
+## 🤝 参与贡献
 
-Issues and PRs welcome. Fork → `git checkout -b feature/amazing` → commit → PR.
+欢迎 Issue 和 PR。Fork → `git checkout -b feature/amazing` → 提交 → PR。
 
-Architecture, design language, and per-feature specs (spec-kit style) live in [`docs/`](docs/) and [`specs/`](specs/), with project principles in [`CONSTITUTION.md`](CONSTITUTION.md). These docs are in Chinese.
+项目按 [spec-kit](https://github.com/github/spec-kit) 的规格驱动方式管理：架构、设计规范、各功能规格在 [`docs/`](docs/) 与 [`specs/`](specs/)，项目原则见 [`CONSTITUTION.md`](CONSTITUTION.md)。
 
-## 📄 License
+## 📄 许可
 
-MIT — see [LICENSE](LICENSE).
+MIT — 见 [LICENSE](LICENSE)。
 
 ---
 
 <div align="center">
-<sub>Crafted with ❤️ for language learners. README media is reproducible: <code>cd scripts && APP_URL=http://localhost:5173 node capture.mjs all</code>.</sub>
+<sub>为语言学习者用 ❤️ 打造。README 媒体可一键复现：<code>cd scripts && APP_URL=http://localhost:5173 node capture.mjs all</code></sub>
 </div>
