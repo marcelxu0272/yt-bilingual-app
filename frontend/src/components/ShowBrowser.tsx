@@ -104,7 +104,7 @@ export const ShowBrowser: React.FC<ShowBrowserProps> = ({ onSelectEpisode, isLoa
                         <button
                             key={show.id}
                             onClick={() => handleShowSelect(show)}
-                            className="flex items-center gap-4 p-3 rounded-xl bg-zinc-800/30 hover:bg-zinc-800/60 border border-white/5 hover:border-white/10 transition-colors cursor-pointer group text-left"
+                            className="flex items-center gap-4 p-3 rounded-lg bg-zinc-800/30 hover:bg-zinc-800/60 border border-white/5 hover:border-white/10 transition-colors cursor-pointer group text-left"
                         >
                             {show.thumbnail && (
                                 <img

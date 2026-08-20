@@ -1,6 +1,6 @@
 import { apiFetch } from '../lib/api';
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2, Play, Youtube, Clock, Tv, Bell, ArrowRight, RotateCcw } from 'lucide-react';
+import { ArrowRight, Bell, Clock, Loader2, Play, RotateCcw, Search, Trash2, Tv, Youtube } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import type { HistoryItem } from './ChannelVideoList';
 import { ModelSelectionModal } from './ModelSelectionModal';
@@ -9,7 +9,15 @@ import { ShowBrowser } from './ShowBrowser';
 import { TiltCard } from './TiltCard';
 import { AuroraBackground } from './AuroraBackground';
 import { SentencePacks } from './SentencePacks';
-import { progressPercent } from '../lib/progress';
+import { progressPercent, removeProgress } from '../lib/progress';
+import { describeApiError, toast } from '../lib/toast';
+
+interface ChannelUpdate {
+    videoId: string;
+    title: string;
+    channel: string;
+    thumbnail?: string;
+}
 
 interface InputScreenProps {
     onSubmit: (url: string, model?: string) => void;
@@ -41,11 +49,12 @@ const itemVariants: Variants = {
 export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistory, onSelectEpisode, onSelectSentenceLevel, isLoading, loadingState, subscriptions = [], onSelectChannel, onOpenReview, reviewDueCount }) => {
     const [url, setUrl] = useState('');
     const [history, setHistory] = useState<HistoryItem[]>([]);
-    const [channelUpdates, setChannelUpdates] = useState<any[]>([]);
+    const [channelUpdates, setChannelUpdates] = useState<ChannelUpdate[]>([]);
     const [isEstimating, setIsEstimating] = useState(false);
     const [estimationData, setEstimationData] = useState<EstimationData | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [pendingUrl, setPendingUrl] = useState('');
+    const [deletingFilename, setDeletingFilename] = useState<string | null>(null);
 
     useEffect(() => {
         apiFetch('/api/history')
@@ -97,8 +106,26 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
         onSubmit(pendingUrl, modelId);
     };
 
+    const handleDeleteHistory = async (event: React.MouseEvent, item: HistoryItem) => {
+        event.stopPropagation();
+        const target = item.metadata?.title ? `“${item.metadata.title}”的` : '这条';
+        if (!window.confirm(`删除${target}学习记录和本地字幕缓存？\n\n删除后无法恢复，再次打开需要重新处理。`)) return;
+        setDeletingFilename(item.filename);
+        try {
+            const response = await apiFetch(`/api/history/${encodeURIComponent(item.filename)}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error(await describeApiError(response));
+            setHistory(previous => previous.filter(entry => entry.filename !== item.filename));
+            if (item.videoId) removeProgress(item.videoId);
+            toast.success('学习记录已删除');
+        } catch (error) {
+            toast.error(await describeApiError(error));
+        } finally {
+            setDeletingFilename(null);
+        }
+    };
+
     return (
-        <div className="min-h-screen flex flex-col items-center p-5 md:p-8 pt-8 md:pt-12 overflow-y-auto custom-scrollbar relative bg-[#ede6d8]">
+        <div className="min-h-screen flex flex-col items-center px-4 py-6 sm:px-6 lg:px-8 lg:py-8 overflow-y-auto custom-scrollbar relative bg-[#ede6d8]">
             {/* Quiet paper grain and ruled texture */}
             <AuroraBackground />
 
@@ -139,196 +166,162 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                 estimationData={estimationData}
             />
 
-            <motion.div 
-                className="max-w-5xl w-full space-y-8 shrink-0 z-10"
+            <motion.main
+                className="max-w-[1480px] w-full space-y-4 shrink-0 z-10"
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
             >
-                {/* Search Bar - Floating Arc Style */}
-                <motion.form variants={itemVariants} className="max-w-3xl mx-auto w-full relative" onSubmit={handleSubmit}>
-                    <div className="relative group">
-                        <div className="absolute -inset-1 rounded-full bg-amber-900/5 opacity-50 group-focus-within:opacity-100 transition-opacity duration-300 ease-apple"></div>
-                        {/* light running around the pill's edge */}
-                        <div className="conic-ring" aria-hidden="true"></div>
-                        <div className="relative flex items-center glass-card rounded-full p-2 pl-6 pr-2 border border-white/10 hover:border-white/20 focus-within:border-brand/60 focus-within:ring-4 focus-within:ring-brand/15 transition-[border-color,box-shadow] duration-200 ease-apple">
-                            <Search className="hidden sm:block w-5 h-5 text-zinc-400" />
+                <motion.div variants={itemVariants} className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+                    <form className="relative" onSubmit={handleSubmit}>
+                        <div className="relative flex h-full min-h-16 items-center rounded-2xl glass-card border border-white/10 p-2 pl-4 sm:pl-5 focus-within:border-brand/60 focus-within:ring-4 focus-within:ring-brand/15 transition-[border-color,box-shadow] duration-200 ease-apple">
+                            <Search className="hidden h-5 w-5 text-zinc-400 sm:block" />
                             <input
-                                id="video-url"
-                                name="url"
-                                type="url"
-                                disabled={isLoading}
-                                required
-                                className="min-w-0 w-full bg-transparent border-none outline-none text-zinc-100 placeholder-zinc-500 px-3 md:px-4 py-3 text-base md:text-lg"
+                                id="video-url" name="url" type="url" disabled={isLoading} required
+                                className="min-w-0 w-full bg-transparent border-none outline-none text-zinc-100 placeholder-zinc-500 px-3 sm:px-4 py-3 text-base"
                                 placeholder="粘贴 YouTube 链接"
                                 value={url}
-                                onChange={(e) => setUrl(e.target.value)}
+                                onChange={(event) => setUrl(event.target.value)}
                             />
                             <button
-                                type="submit"
-                                disabled={isLoading || !url.trim()}
-                                className="inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0 h-12 px-4 md:px-6 rounded-full bg-zinc-100 text-zinc-900 text-sm font-semibold hover:bg-white active:scale-[0.98] transition-[background-color,transform,opacity] duration-200 ease-apple disabled:opacity-50"
+                                type="submit" disabled={isLoading || !url.trim()}
+                                className="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-zinc-100 px-4 sm:px-5 text-sm font-semibold text-zinc-900 hover:bg-white active:scale-[0.98] transition-[background-color,transform,opacity] duration-200 ease-apple disabled:opacity-50"
                             >
-                                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : '开始'}
-                                {!isLoading && <ArrowRight className="w-4 h-4" />}
+                                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : '开始'}
+                                {!isLoading && <ArrowRight className="h-4 w-4" />}
                             </button>
                         </div>
-                    </div>
-                </motion.form>
+                    </form>
 
-                {/* Sentence Packs — the third learning mode */}
-                <motion.div variants={itemVariants}>
-                    <SentencePacks onSelectLevel={onSelectSentenceLevel} />
+                    <button onClick={onOpenReview} className="glass-panel min-h-16 rounded-2xl px-4 flex items-center justify-between text-left hover:bg-white/5 active:scale-[0.98] transition-[background-color,transform] duration-200 ease-apple group">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-amber-500/20 bg-amber-500/10">
+                                <RotateCcw className="h-5 w-5 text-amber-500" />
+                            </div>
+                            <p className="text-[17px] font-semibold tracking-tight text-zinc-100">今日复习</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-zinc-500 tabular-nums">{reviewDueCount > 0 ? `${reviewDueCount} 张` : '已完成'}</span>
+                            <ArrowRight className="h-4 w-4 text-zinc-600 transition-colors group-hover:text-zinc-200" />
+                        </div>
+                    </button>
                 </motion.div>
 
-                <motion.button variants={itemVariants} onClick={onOpenReview} className="w-full glass-panel rounded-3xl p-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors group">
-                    <div className="flex items-center gap-4">
-                        <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                            <RotateCcw className="w-5 h-5 text-amber-500" />
-                        </div>
-                        <p className="text-[17px] font-semibold tracking-tight text-zinc-100">今日复习</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm text-zinc-500 tabular-nums">{reviewDueCount > 0 ? `${reviewDueCount} 张` : '已完成'}</span>
-                        <ArrowRight className="w-5 h-5 text-zinc-600 group-hover:text-zinc-200 transition-colors" />
-                    </div>
-                </motion.button>
-
-                {/* Bento Grid */}
-                <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-2">
-                    
-                    {/* Left Column: Recent Learning */}
-                    <div className="md:col-span-7 flex flex-col gap-6">
-                        {/* History Card */}
-                        <TiltCard className="glass-panel rounded-3xl p-6 h-full overflow-hidden group">
-                            <div className="flex items-center gap-2 mb-6 text-zinc-100">
-                                <div className="flex items-center gap-2 text-zinc-100">
-                                    <Clock className="w-5 h-5" />
-                                    <h3 className="text-[17px] font-semibold tracking-tight">最近学习</h3>
-                                </div>
-                            </div>
-
-                            {history.length === 0 ? (
-                                <div className="flex items-center justify-center py-12 text-center">
-                                    <p className="text-sm text-zinc-500">暂无记录</p>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-4">
-                                    {history.slice(0, 3).map((item) => (
+                <motion.div variants={itemVariants} className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+                    <div className="flex flex-col gap-4 lg:col-span-8">
+                    <TiltCard className="glass-panel rounded-2xl p-4 sm:p-5 overflow-hidden">
+                        <SectionTitle icon={<Clock className="h-5 w-5" />} title="最近学习" />
+                        {history.length === 0 ? (
+                            <div className="flex items-center justify-center py-12 text-center"><p className="text-sm text-zinc-500">暂无记录</p></div>
+                        ) : (
+                            <div className="grid gap-2.5 xl:grid-cols-2">
+                                {history.slice(0, 6).map(item => {
+                                    const percent = item.videoId ? progressPercent(item.videoId) : null;
+                                    const deleting = deletingFilename === item.filename;
+                                    return (
                                         <motion.div
                                             key={item.filename}
                                             whileTap={{ scale: 0.98 }}
-                                            transition={{ type: "spring", stiffness: 550, damping: 35 }}
+                                            transition={{ type: 'spring', stiffness: 550, damping: 35 }}
                                             onClick={() => onLoadHistory(item.filename)}
                                             data-testid="history-card"
-                                            className="group/card flex items-center gap-4 p-3 rounded-xl bg-zinc-800/30 hover:bg-zinc-800/60 border border-white/5 hover:border-white/10 transition-colors cursor-pointer"
+                                            className="group/card flex min-w-0 cursor-pointer items-center gap-3 rounded-lg border border-white/5 bg-zinc-800/30 p-2.5 transition-[background-color,border-color] hover:border-white/10 hover:bg-zinc-800/60"
                                         >
-                                            <div className="relative w-24 aspect-video rounded-lg overflow-hidden bg-zinc-900 shrink-0">
-                                                {item.metadata?.thumbnail && (
-                                                    <img src={item.metadata.thumbnail} alt="thumb" className="w-full h-full object-cover" />
-                                                )}
-                                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <span className="bg-white/15 backdrop-blur-md p-3 rounded-full">
-                                                        <Play className="w-5 h-5 text-white fill-current" />
-                                                    </span>
+                                            <div className="relative w-20 sm:w-24 aspect-video shrink-0 overflow-hidden rounded-lg bg-zinc-900">
+                                                {item.metadata?.thumbnail && <img src={item.metadata.thumbnail} alt="" loading="lazy" className="h-full w-full object-cover" />}
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/25 opacity-0 transition-opacity group-hover/card:opacity-100">
+                                                    <Play className="h-4 w-4 fill-current text-white" />
                                                 </div>
-                                                {item.videoId && progressPercent(item.videoId) !== null && (
-                                                    <div className="absolute bottom-0 inset-x-0 h-1 bg-black/60">
-                                                        <div
-                                                            className="h-full bg-emerald-500"
-                                                            style={{ width: `${progressPercent(item.videoId)}%` }}
-                                                        />
-                                                    </div>
+                                                {percent !== null && (
+                                                    <div className="absolute inset-x-0 bottom-0 h-1 bg-black/60"><div className="h-full bg-emerald-500" style={{ width: `${percent}%` }} /></div>
                                                 )}
                                             </div>
-                                            <div className="flex flex-col overflow-hidden">
-                                                <h4 className="text-zinc-200 font-medium truncate text-sm mb-1">{item.metadata?.title || '本地视频'}</h4>
-                                                <p className="text-zinc-500 text-xs flex items-center gap-1">
-                                                    <Youtube className="w-3 h-3" /> {item.metadata?.channel || '本地文件'}
-                                                    {item.videoId && progressPercent(item.videoId) !== null && (
-                                                        <span className="ml-1 text-emerald-500/90">· {progressPercent(item.videoId)}%</span>
-                                                    )}
+                                            <div className="min-w-0 flex-1">
+                                                <h4 className="truncate text-sm font-medium text-zinc-200">{item.metadata?.title || '本地视频'}</h4>
+                                                <p className="mt-1 flex min-w-0 items-center gap-1 text-xs text-zinc-500">
+                                                    <Youtube className="h-3 w-3 shrink-0" />
+                                                    <span className="truncate">{item.metadata?.channel || '本地文件'}</span>
+                                                    {percent !== null && <span className="shrink-0 text-emerald-500/90">· {percent}%</span>}
                                                 </p>
                                             </div>
+                                            <button
+                                                type="button"
+                                                disabled={deleting}
+                                                onClick={(event) => handleDeleteHistory(event, item)}
+                                                aria-label={`删除${item.metadata?.title || '学习记录'}`}
+                                                title="删除学习记录"
+                                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-zinc-600 opacity-50 transition-[background-color,color,opacity] hover:bg-red-500/10 hover:text-red-500 hover:opacity-100 focus-visible:opacity-100 disabled:cursor-wait"
+                                            >
+                                                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                            </button>
                                         </motion.div>
-                                    ))}
-                                </div>
-                            )}
-                        </TiltCard>
-
-                        {/* Local Shows Section */}
-                        <TiltCard className="glass-panel rounded-3xl p-6 overflow-hidden">
-                             <div className="flex items-center gap-2 mb-6 text-zinc-100">
-                                <Tv className="w-5 h-5 text-blue-400" />
-                                <h3 className="text-[17px] font-semibold tracking-tight">本地剧集</h3>
+                                    );
+                                })}
                             </div>
-                            <ShowBrowser onSelectEpisode={onSelectEpisode} isLoading={!!isLoading} />
-                        </TiltCard>
+                        )}
+                    </TiltCard>
+
+                    <TiltCard className="glass-panel rounded-2xl p-4 sm:p-5 overflow-hidden">
+                        <SectionTitle icon={<Tv className="h-5 w-5 text-blue-400" />} title="本地剧集" />
+                        <ShowBrowser onSelectEpisode={onSelectEpisode} isLoading={!!isLoading} />
+                    </TiltCard>
                     </div>
 
-                    {/* Right Column: Subscriptions & Updates */}
-                    <div className="md:col-span-5 flex flex-col gap-6">
-                        
-                        {/* Channels Bento */}
-                        {subscriptions && subscriptions.length > 0 && (
-                            <TiltCard className="glass-panel rounded-3xl p-6">
-                                <div className="flex items-center gap-2 mb-6 text-zinc-100">
-                                    <Youtube className="w-5 h-5 text-red-500" />
-                                    <h3 className="text-[17px] font-semibold tracking-tight">订阅</h3>
-                                </div>
+                    <div className="flex flex-col gap-4 lg:col-span-4">
+                    <TiltCard className="glass-panel rounded-2xl p-4 sm:p-5 overflow-hidden">
+                        <SectionTitle icon={<Bell className="h-5 w-5 text-amber-400" />} title="最近更新" />
+                        <div className="grid gap-2.5">
+                            {channelUpdates.length === 0 ? (
+                                <div className="flex items-center justify-center py-12 text-center"><p className="text-sm text-zinc-500">暂无更新</p></div>
+                            ) : channelUpdates.slice(0, 4).map((update, index) => (
+                                <motion.button
+                                    key={`${update.videoId}-${index}`}
+                                    whileTap={{ scale: 0.98 }}
+                                    transition={{ type: 'spring', stiffness: 550, damping: 35 }}
+                                    onClick={() => handleInterceptSubmit(`https://youtube.com/watch?v=${update.videoId}`)}
+                                    className="group flex w-full items-center gap-3 rounded-lg border border-white/5 bg-zinc-800/30 p-2.5 text-left transition-[background-color,border-color] hover:border-white/10 hover:bg-zinc-800/60"
+                                >
+                                    <div className="w-20 aspect-video shrink-0 overflow-hidden rounded-lg bg-zinc-800">
+                                        {update.thumbnail && <img src={update.thumbnail} className="h-full w-full object-cover" loading="lazy" alt="" />}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h4 className="line-clamp-2 text-sm font-medium text-zinc-300 transition-colors group-hover:text-zinc-100">{update.title}</h4>
+                                        <p className="mt-1 truncate text-xs text-zinc-500">{update.channel}</p>
+                                    </div>
+                                </motion.button>
+                            ))}
+                        </div>
+                    </TiltCard>
+
+                    <div className="contents">
+                        {subscriptions.length > 0 && (
+                            <TiltCard className="glass-panel rounded-2xl p-4 sm:p-5">
+                                <SectionTitle icon={<Youtube className="h-5 w-5 text-red-500" />} title="订阅" />
                                 <div className="flex flex-wrap gap-2">
-                                    {subscriptions.slice(0, 6).map(sub => (
-                                        <motion.div
-                                            whileTap={{ scale: 0.98 }}
-                                            transition={{ type: "spring", stiffness: 550, damping: 35 }}
-                                            key={sub.id}
-                                            onClick={() => onSelectChannel(sub.name)}
-                                            className="inline-flex items-center h-8 px-3 rounded-lg bg-zinc-800/60 hover:bg-zinc-700/60 border border-white/5 text-sm font-medium text-zinc-300 hover:text-zinc-100 cursor-pointer transition-colors"
+                                    {subscriptions.slice(0, 8).map(subscription => (
+                                        <motion.button
+                                            whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 550, damping: 35 }}
+                                            key={subscription.id} onClick={() => onSelectChannel(subscription.name)}
+                                            className="inline-flex min-h-10 items-center rounded-lg border border-white/5 bg-zinc-800/60 px-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-700/60 hover:text-zinc-100"
                                         >
-                                            {sub.name}
-                                        </motion.div>
+                                            {subscription.name}
+                                        </motion.button>
                                     ))}
                                 </div>
                             </TiltCard>
                         )}
-
-                        {/* Updates Bento */}
-                        <TiltCard className="glass-panel rounded-3xl p-6 flex-1 flex flex-col">
-                            <div className="flex items-center gap-2 mb-6 text-zinc-100">
-                                <Bell className="w-5 h-5 text-amber-400" />
-                                <h3 className="text-[17px] font-semibold tracking-tight">最近更新</h3>
-                            </div>
-                            
-                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
-                                {channelUpdates.length === 0 ? (
-                                    <div className="flex items-center justify-center py-12 text-center">
-                                        <p className="text-sm text-zinc-500">暂无更新</p>
-                                    </div>
-                                ) : (
-                                    channelUpdates.map((update, idx) => (
-                                        <motion.div
-                                            whileTap={{ scale: 0.98 }}
-                                            transition={{ type: "spring", stiffness: 550, damping: 35 }}
-                                            key={`${update.videoId}-${idx}`}
-                                            onClick={() => handleInterceptSubmit(`https://youtube.com/watch?v=${update.videoId}`)}
-                                            className="flex gap-4 p-3 rounded-xl bg-zinc-800/30 hover:bg-zinc-800/60 border border-white/5 hover:border-white/10 transition-colors cursor-pointer group"
-                                        >
-                                            <div className="w-24 aspect-video rounded-lg bg-zinc-800 overflow-hidden shrink-0 relative">
-                                                {update.thumbnail && <img src={update.thumbnail} className="w-full h-full object-cover" alt="" />}
-                                            </div>
-                                            <div className="flex flex-col justify-center">
-                                                <h4 className="text-zinc-300 text-sm font-medium line-clamp-2 group-hover:text-white transition-colors">{update.title}</h4>
-                                                <p className="text-zinc-500 text-xs mt-1">{update.channel}</p>
-                                            </div>
-                                        </motion.div>
-                                    ))
-                                )}
-                            </div>
-                        </TiltCard>
-
+                        <SentencePacks compact onSelectLevel={onSelectSentenceLevel} />
+                    </div>
                     </div>
                 </motion.div>
-            </motion.div>
+            </motion.main>
         </div>
     );
 };
+
+const SectionTitle: React.FC<{ icon: React.ReactNode; title: string }> = ({ icon, title }) => (
+    <div className="mb-4 flex items-center gap-2 text-zinc-100">
+        {icon}
+        <h3 className="text-[17px] font-semibold tracking-tight">{title}</h3>
+    </div>
+);

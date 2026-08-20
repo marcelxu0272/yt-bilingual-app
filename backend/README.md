@@ -12,7 +12,7 @@
 | `llm.py` | DeepSeek OpenAI 兼容客户端，统一文本与 JSON 输出 |
 | `transcripts.py` | 拿到"待翻译的句子"：YouTube 字幕抓取（失败→清晰中文错误）、切句算法、SRT 解析、yt-dlp 元数据、Whisper 本地转写兜底（可选依赖） |
 | `translate.py` | AI 翻译核心：`process_llm_batch`（DeepSeek 批翻 + **按 id 对齐**防错位 + 按水平挑生词）、`UNTRANSLATED_MARKER` 自愈约定、`retranslate_marked_blocks`（补译）、`_stream_translate`（逐批落盘的流式生成器）、视频总结 |
-| `routes_videos.py` | `/api/estimate-cost`、`/api/process-video`（经典，移动端用）、`/api/process-video-stream`（SSE，产品核心）、`/api/history*`、`/api/channel-updates` |
+| `routes_videos.py` | `/api/estimate-cost`、`/api/process-video`（经典，移动端用）、`/api/process-video-stream`（SSE，产品核心）、`/api/history*`（含受保护的单条删除）、`/api/channel-updates` |
 | `routes_content.py` | `/api/shows*`、`/api/process-subtitle`（本地剧集）、`/api/sentences*`（句子精背） |
 | `routes_user.py` | `/api/define`（词典，`dictionary_cache.json` 每词只调一次）、`/api/favorites`、`/api/subscriptions` |
 | `requirements.txt` | Python 依赖（faster-whisper 为可选，见文件内注释） |

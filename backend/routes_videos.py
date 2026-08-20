@@ -417,12 +417,32 @@ async def create_study_guide(video_id: str, request: StudyGuideRequest | None = 
     return guide
 
 
+RESERVED_HISTORY_FILES = {
+    "dictionary_cache.json",
+    "favorites.json",
+    "review_state.json",
+    "subscriptions.json",
+}
+
+
+def _resolve_history_path(filename: str) -> str:
+    if os.path.basename(filename) != filename or not filename.endswith(".json"):
+        raise HTTPException(status_code=404, detail="History file not found")
+    if filename in RESERVED_HISTORY_FILES:
+        raise HTTPException(status_code=400, detail="该文件不是学习历史，不能删除。")
+    history_root = os.path.realpath(HISTORY_DIR)
+    file_path = os.path.realpath(os.path.join(history_root, filename))
+    if os.path.dirname(file_path) != history_root:
+        raise HTTPException(status_code=404, detail="History file not found")
+    return file_path
+
+
 @router.get("/api/history")
 def list_history():
     files = []
     if os.path.exists(HISTORY_DIR):
         for f in os.listdir(HISTORY_DIR):
-            if f.endswith('.json') and f not in ["favorites.json", "subscriptions.json"]:
+            if f.endswith('.json') and f not in RESERVED_HISTORY_FILES:
                 file_path = os.path.join(HISTORY_DIR, f)
                 try:
                     with open(file_path, "r", encoding="utf-8") as file:
@@ -445,11 +465,8 @@ def list_history():
 
 @router.get("/api/history/{filename}")
 async def get_history(filename: str):
-    # Guard against path traversal — only bare filenames inside HISTORY_DIR
-    if os.path.basename(filename) != filename:
-        raise HTTPException(status_code=404, detail="History file not found")
-    file_path = os.path.join(HISTORY_DIR, filename)
-    if not os.path.exists(file_path) or not filename.endswith('.json'):
+    file_path = _resolve_history_path(filename)
+    if not os.path.isfile(file_path):
         raise HTTPException(status_code=404, detail="History file not found")
 
     with open(file_path, "r", encoding="utf-8") as f:
@@ -458,6 +475,27 @@ async def get_history(filename: str):
     if isinstance(data, dict) and data.get("transcript"):
         data = await retranslate_marked_blocks(data, file_path)
     return data
+
+
+@router.delete("/api/history/{filename}")
+def delete_history(filename: str):
+    """Delete one exact learning-history cache after the UI confirms it."""
+    file_path = _resolve_history_path(filename)
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="学习记录不存在或已被删除。")
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        raise HTTPException(status_code=400, detail="该文件不是可删除的学习记录。")
+    if not isinstance(data, dict) or not isinstance(data.get("transcript"), list):
+        raise HTTPException(status_code=400, detail="该文件不是可删除的学习记录。")
+    try:
+        os.remove(file_path)
+    except OSError as e:
+        print(f"Failed to delete history {filename}: {e}")
+        raise HTTPException(status_code=500, detail="删除失败，请检查文件是否被占用。")
+    return {"deleted": filename, "videoId": data.get("videoId")}
 
 
 class ChannelUpdatesRequest(BaseModel):
