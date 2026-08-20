@@ -1,10 +1,8 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Fancy layered home-screen background:
- * aurora blobs → rotating halo → grid → rising particles → shooting stars
- * → mouse spotlight → film grain. Pure CSS/GPU animations (see index.css),
- * honors prefers-reduced-motion.
+ * Paper-texture background. The existing DOM hooks stay stable so captures and
+ * older component tests keep working; CSS hides the decorative aurora layers.
  */
 export const AuroraBackground = () => {
     const ref = useRef<HTMLDivElement>(null);

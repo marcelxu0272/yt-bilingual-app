@@ -1,17 +1,16 @@
 """用户数据路由：点查词典、收藏、订阅。
 
-词典释义按小写单词落盘缓存（每词只调一次 Gemini）；
+词典释义按小写单词落盘缓存（每词只调一次 DeepSeek）；
 收藏与订阅是简单的整存整取 JSON 文件。
 """
 import json
 import os
 
 from fastapi import APIRouter, HTTPException
-from google import genai
-from google.genai import types
 from pydantic import BaseModel
 
-from config import HISTORY_DIR
+from config import DEFAULT_MODEL, HISTORY_DIR
+from llm import chat_json
 
 router = APIRouter()
 
@@ -20,7 +19,7 @@ router = APIRouter()
 # ====================================================
 
 DICT_CACHE_FILE = os.path.join(HISTORY_DIR, "dictionary_cache.json")
-DICT_MODEL = "gemini-2.5-flash-lite"  # fast + cheap for single-word lookups
+DICT_MODEL = DEFAULT_MODEL
 
 
 class DefineRequest(BaseModel):
@@ -66,13 +65,7 @@ Return ONLY a JSON object with exactly these fields:
 }}"""
 
     try:
-        client = genai.Client()
-        response = client.models.generate_content(
-            model=DICT_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
-        )
-        result = json.loads(response.text)
+        result = await chat_json(prompt, DICT_MODEL)
         if isinstance(result, list):
             result = result[0] if result else {}
         result.setdefault("word", word)

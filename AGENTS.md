@@ -4,7 +4,7 @@
 
 ## 这是什么项目
 
-**Lingua Nova**：帮中文用户通过 YouTube 视频学英语的本地应用。三种学习模式：看视频（AI 双语字幕流式生成）、本地剧集（SRT）、句子精背。React 19 + FastAPI + Gemini 2.5。
+**Lingua Nova**：帮中文用户通过 YouTube 视频学英语的本地应用。三种学习模式：看视频（AI 双语字幕流式生成）、本地剧集（SRT）、句子精背。React 19 + FastAPI + DeepSeek。
 
 ## 读文档的顺序
 
@@ -41,7 +41,7 @@ cd scripts && APP_URL=http://localhost:5173 node capture.mjs all         # 重�
 
 | 目录 | 是什么 | 有 README |
 |---|---|---|
-| `backend/` | FastAPI 后端，7 个模块 | ✓ |
+| `backend/` | FastAPI 后端，8 个模块 | ✓ |
 | `frontend/src/components/` | React UI 组件 | ✓ |
 | `frontend/src/lib/` | 纯逻辑（无 UI） | ✓ |
 | `content/sentences/` | 句子精背静态数据 | ✓ |

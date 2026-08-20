@@ -8,7 +8,7 @@ interface VocabAxisProps {
 
 /**
  * Vocabulary level as a journey along an axis: six stops from Liftoff to
- * Supernova. No numbers — the gradient fills toward deeper space as the
+ * Supernova. No numbers; the brand-blue rail fills as the
  * learner's vocabulary grows.
  */
 export const VocabAxis: React.FC<VocabAxisProps> = ({ value, onChange }) => {
@@ -28,7 +28,7 @@ export const VocabAxis: React.FC<VocabAxisProps> = ({ value, onChange }) => {
                 <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[3px] rounded-full bg-white/10" />
                 {/* lit portion up to the selected stop */}
                 <motion.div
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-[3px] rounded-full bg-gradient-to-r from-sky-400 via-violet-400 to-pink-400 shadow-[0_0_12px_rgba(139,92,246,0.5)]"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-[3px] rounded-full bg-blue-500 shadow-[0_0_10px_rgba(10,111,214,0.28)]"
                     initial={false}
                     animate={{ width: `${pct}%` }}
                     transition={{ type: 'spring', stiffness: 320, damping: 32 }}
@@ -54,7 +54,7 @@ export const VocabAxis: React.FC<VocabAxisProps> = ({ value, onChange }) => {
                 })}
                 {/* glowing thumb on the selected stop */}
                 <motion.span
-                    className="absolute top-1/2 w-5 h-5 rounded-full bg-zinc-50 shadow-[0_0_0_4px_rgba(139,92,246,0.25),0_0_18px_rgba(139,92,246,0.6)] pointer-events-none"
+                    className="absolute top-1/2 w-5 h-5 rounded-full bg-zinc-50 shadow-[0_0_0_4px_rgba(10,111,214,0.18),0_0_14px_rgba(10,111,214,0.32)] pointer-events-none"
                     initial={false}
                     animate={{ left: `${pct}%` }}
                     style={{ y: '-50%', x: '-50%' }}
@@ -63,7 +63,7 @@ export const VocabAxis: React.FC<VocabAxisProps> = ({ value, onChange }) => {
             </div>
 
             {/* Stop names */}
-            <div className="relative h-5 mx-3 mt-1.5">
+            <div className="hidden sm:block relative h-5 mx-3 mt-1.5">
                 {VOCAB_LEVELS.map((level, i) => (
                     <button
                         key={level.id}
@@ -77,6 +77,10 @@ export const VocabAxis: React.FC<VocabAxisProps> = ({ value, onChange }) => {
                         {level.label}
                     </button>
                 ))}
+            </div>
+
+            <div className="sm:hidden mt-1.5 text-center text-xs font-medium text-zinc-100">
+                {selected.label}
             </div>
 
             {/* Tagline for the selected stop */}

@@ -1,12 +1,12 @@
 """环境与配置：路径、安全开关、模型目录、词汇水平。
 
 所有模块都从这里取配置；load_dotenv 在首次 import 时执行，
-保证 GEMINI_API_KEY 等在任何 Gemini 调用之前就已加载。
+保证 DEEPSEEK_API_KEY 等在任何 DeepSeek 调用之前就已加载。
 """
 import os
 from dotenv import load_dotenv
 
-# Load .env file (for GEMINI_API_KEY etc.)
+# Load .env file (for DEEPSEEK_API_KEY etc.)
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env"))
 
 _BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -29,11 +29,11 @@ _cors_env = os.environ.get("CORS_ORIGINS", "")
 ALLOWED_ORIGINS = [o.strip() for o in _cors_env.split(",") if o.strip()] or ["*"]
 
 # API_AUTH_KEY: when set, every /api request must carry a matching X-API-Key
-# header. Without it a public deployment is an open proxy for your Gemini key.
+# header. Without it a public deployment is an open proxy for your DeepSeek key.
 API_AUTH_KEY = os.environ.get("API_AUTH_KEY", "")
 
 if ALLOWED_ORIGINS == ["*"] and not API_AUTH_KEY:
-    print("⚠️  Running fully open (CORS * / no API key) — fine locally, "
+    print("Warning: running fully open (CORS * / no API key). Fine locally; "
           "set CORS_ORIGINS and API_AUTH_KEY before deploying publicly.")
 
 # --- Learner level -> description used to calibrate which words get highlighted.
@@ -53,23 +53,16 @@ VOCAB_LEVELS = {
     "advanced": "near-native (CEFR C2). Only highlight rare idioms, slang, or cultural references.",
 }
 
-# --- Real, selectable models. Prices are USD per 1M tokens (approximate,
-# check https://ai.google.dev/pricing for current numbers).
+# --- DeepSeek models. Prices are USD per 1M tokens and only drive the UI
+# estimate. Update them from https://api-docs.deepseek.com/quick_start/pricing
+# if the provider changes its rates.
 MODEL_CATALOG = {
-    "gemini-2.5-flash": {
-        "name": "Gemini 2.5 Flash", "provider": "Google",
-        "in": 0.30, "out": 2.50, "quotaInfo": "Default · balanced quality & speed",
-    },
-    "gemini-2.5-flash-lite": {
-        "name": "Gemini 2.5 Flash-Lite", "provider": "Google",
-        "in": 0.10, "out": 0.40, "quotaInfo": "Cheapest · great for long videos",
-    },
-    "gemini-2.5-pro": {
-        "name": "Gemini 2.5 Pro", "provider": "Google",
-        "in": 1.25, "out": 10.00, "quotaInfo": "Highest quality · slower",
+    "deepseek-chat": {
+        "name": "DeepSeek Chat", "provider": "DeepSeek",
+        "in": 0.28, "out": 0.42, "quotaInfo": "默认 · 适合翻译、总结与结构化输出",
     },
 }
-DEFAULT_MODEL = "gemini-2.5-flash"
+DEFAULT_MODEL = "deepseek-chat"
 
 
 def resolve_model(model: str | None) -> str:

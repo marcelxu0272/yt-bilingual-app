@@ -123,7 +123,7 @@ function App() {
         setPipWindow(null);
       });
 
-      newPipWindow.document.body.className = "bg-zinc-950 overflow-hidden m-0 p-0 h-screen flex flex-col";
+      newPipWindow.document.body.className = "paper-theme bg-zinc-950 overflow-hidden m-0 p-0 h-screen flex flex-col";
       setPipWindow(newPipWindow);
     } catch (err) {
       console.error(err);
@@ -635,13 +635,13 @@ function App() {
   }, []);
 
   const renderTopBar = () => (
-    <div className="flex-none h-16 bg-zinc-950/60 backdrop-blur-xl border-b border-white/5 px-6 flex items-center justify-between z-20">
+    <div className="flex-none h-16 bg-zinc-950/60 backdrop-blur-xl border-b border-white/5 px-3 md:px-6 flex items-center justify-between z-20">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-[10px] overflow-hidden shadow-md shadow-black/40 ring-1 ring-white/10 cursor-pointer flex-shrink-0" onClick={handleGoHome}>
             <img src="/hero_icon.png" alt="Logo" className="w-full h-full object-cover" />
         </div>
         <h1
-          className="text-xl font-semibold text-zinc-100 cursor-pointer tracking-tight hover:text-white transition-colors"
+          className="text-lg md:text-xl font-semibold text-zinc-100 cursor-pointer tracking-tight hover:text-white transition-colors whitespace-nowrap"
           onClick={handleGoHome}
         >
           Lingua Nova
@@ -650,10 +650,10 @@ function App() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => setIsFavoritesOpen(true)}
-          className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-zinc-800/60 hover:bg-zinc-700/60 border border-white/5 text-zinc-300 hover:text-zinc-100 transition-[background-color,color,border-color,transform] duration-200 ease-apple active:scale-[0.97]"
+          className="inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-xl bg-zinc-800/60 hover:bg-zinc-700/60 border border-white/5 text-zinc-300 hover:text-zinc-100 transition-[background-color,color,border-color,transform] duration-200 ease-apple active:scale-[0.97]"
         >
           <Star className="w-4 h-4 text-amber-400 fill-amber-400/20" />
-          <span className="font-medium text-sm tabular-nums">Favorites ({favorites.length})</span>
+          <span className="font-medium text-sm tabular-nums"><span className="hidden sm:inline">Favorites </span>({favorites.length})</span>
         </button>
         {videoId && transcript.length > 0 && (
           <button
@@ -669,7 +669,7 @@ function App() {
   );
 
   return (
-    <div className="h-screen w-full flex flex-col bg-[#09090b] overflow-hidden text-zinc-100 selection:bg-purple-500/30">
+    <div className="paper-theme h-screen w-full flex flex-col bg-[#ede6d8] overflow-hidden text-zinc-100 selection:bg-blue-500/20">
       {renderTopBar()}
 
       {/* Keyed motion.divs crossfade views on mount; no exit-gating so a
@@ -1052,7 +1052,7 @@ function App() {
                 )}
 
                 <div className="relative flex-1 min-h-0 bg-transparent">
-                  <div className="absolute top-0 inset-x-0 h-8 bg-gradient-to-b from-[#09090b] to-transparent z-10 pointer-events-none"></div>
+                  <div className="absolute top-0 inset-x-0 h-8 bg-gradient-to-b from-[#ede6d8] to-transparent z-10 pointer-events-none"></div>
                   <TranscriptView
                     transcript={transcript}
                     activeIndex={activeTranscriptIndex}
@@ -1064,14 +1064,14 @@ function App() {
                     dictation={dictationMode}
                     onWordLookup={handleWordLookup}
                   />
-                  <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#09090b] to-transparent z-10 pointer-events-none"></div>
+                  <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#ede6d8] to-transparent z-10 pointer-events-none"></div>
                 </div>
               </>
             );
 
             if (pipWindow) {
               return createPortal(
-                <div className="w-full h-full flex flex-col relative bg-[#09090b]">
+                <div className="paper-theme w-full h-full flex flex-col relative bg-[#ede6d8]">
                   {transcriptContent}
                 </div>,
                 pipWindow.document.body

@@ -168,7 +168,7 @@ async def process_video(request: VideoRequest):
             try:
                 batch_result = await process_llm_batch(batch)
                 processed_blocks.extend(batch_result)
-                await asyncio.sleep(4)  # Standard 15 RPM delay -> 1 req / 4s
+                await asyncio.sleep(1)  # gentle pacing for provider rate limits
                 success = True
                 break  # Break out of retry loop
             except Exception as e:

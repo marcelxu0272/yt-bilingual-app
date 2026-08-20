@@ -104,8 +104,8 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center p-8 pt-20 overflow-y-auto custom-scrollbar relative bg-[#09090b]">
-            {/* Layered animated background: aurora, halo, grid, particles, spotlight */}
+        <div className="min-h-screen flex flex-col items-center p-5 md:p-8 pt-8 md:pt-20 overflow-y-auto custom-scrollbar relative bg-[#ede6d8]">
+            {/* Quiet paper grain and ruled texture */}
             <AuroraBackground />
 
             <AnimatePresence>
@@ -153,15 +153,15 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                 animate="show"
             >
                 {/* Hero Section */}
-                <motion.div variants={itemVariants} className="text-center mt-12 mb-8">
+                <motion.div variants={itemVariants} className="text-center mt-6 md:mt-12 mb-8">
                     <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full glass-card text-xs font-medium text-zinc-300">
                         <span className="flex h-2 w-2 rounded-full bg-emerald-500"></span>
                         Lingua Nova Engine
                     </div>
-                    <h2 className="hero-shimmer text-5xl md:text-6xl font-semibold tracking-[-0.015em] mb-4">
+                    <h2 lang="en" className="hero-shimmer text-5xl md:text-6xl font-semibold tracking-[-0.022em] mb-4 text-balance">
                         Watch YouTube. Learn English.
                     </h2>
-                    <p className="text-lg text-zinc-400 font-normal leading-relaxed max-w-2xl mx-auto">
+                    <p lang="en" className="text-lg text-zinc-400 font-normal leading-relaxed max-w-2xl mx-auto text-balance">
                         Paste a link — get synced bilingual subtitles, vocabulary picked for your level, and an AI summary. Instantly.
                     </p>
                 </motion.div>
@@ -169,28 +169,30 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                 {/* Search Bar - Floating Arc Style */}
                 <motion.form variants={itemVariants} className="max-w-3xl mx-auto w-full relative" onSubmit={handleSubmit}>
                     <div className="relative group">
-                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/15 to-purple-500/15 rounded-full blur opacity-25 group-focus-within:opacity-60 transition-opacity duration-300 ease-apple"></div>
+                        <div className="absolute -inset-1 rounded-full bg-amber-900/5 opacity-50 group-focus-within:opacity-100 transition-opacity duration-300 ease-apple"></div>
                         {/* light running around the pill's edge */}
                         <div className="conic-ring" aria-hidden="true"></div>
                         <div className="relative flex items-center glass-card rounded-full p-2 pl-6 pr-2 border border-white/10 hover:border-white/20 focus-within:border-brand/60 focus-within:ring-4 focus-within:ring-brand/15 transition-[border-color,box-shadow] duration-200 ease-apple">
-                            <Search className="w-5 h-5 text-zinc-400" />
+                            <Search className="hidden sm:block w-5 h-5 text-zinc-400" />
                             <input
                                 id="video-url"
                                 name="url"
                                 type="url"
                                 disabled={isLoading}
                                 required
-                                className="w-full bg-transparent border-none outline-none text-zinc-100 placeholder-zinc-500 px-4 py-3 text-lg"
-                                placeholder="Paste a YouTube link…"
+                                className="min-w-0 w-full bg-transparent border-none outline-none text-zinc-100 placeholder-zinc-500 px-3 md:px-4 py-3 text-base md:text-lg"
+                                placeholder="YouTube link…"
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                             />
                             <button
                                 type="submit"
                                 disabled={isLoading || !url.trim()}
-                                className="inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0 h-12 px-6 rounded-full bg-zinc-100 text-zinc-900 text-sm font-semibold hover:bg-white active:scale-[0.98] transition-[background-color,transform,opacity] duration-200 ease-apple disabled:opacity-50"
+                                className="inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0 h-12 px-4 md:px-6 rounded-full bg-zinc-100 text-zinc-900 text-sm font-semibold hover:bg-white active:scale-[0.98] transition-[background-color,transform,opacity] duration-200 ease-apple disabled:opacity-50"
                             >
-                                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Start Learning'}
+                                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                                    <><span className="sm:hidden">Start</span><span className="hidden sm:inline">Start Learning</span></>
+                                )}
                                 {!isLoading && <ArrowRight className="w-4 h-4" />}
                             </button>
                         </div>

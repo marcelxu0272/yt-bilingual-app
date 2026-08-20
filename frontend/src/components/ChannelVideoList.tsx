@@ -56,7 +56,7 @@ export const ChannelVideoList: React.FC<ChannelVideoListProps> = ({ isOpen, onCl
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/70 backdrop-blur-md p-4 animate-[fadeIn_0.25s_ease-out]">
+        <div className="paper-scrim fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/70 backdrop-blur-md p-4 animate-[fadeIn_0.25s_ease-out]">
             <div className="bg-zinc-900/90 backdrop-blur-2xl border border-white/10 w-full max-w-4xl rounded-2xl shadow-2xl shadow-black/60 flex flex-col max-h-[85vh] overflow-hidden animate-[slideUp_0.32s_cubic-bezier(0.25,1,0.5,1)]">
                 <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
                     <div>
