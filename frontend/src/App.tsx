@@ -1,13 +1,14 @@
 import { apiFetch } from './lib/api';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Star, ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Loader2, XCircle, Repeat, Keyboard, EyeOff } from 'lucide-react';
+import { Star, ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Loader2, XCircle, Repeat, Keyboard, EyeOff, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { InputScreen } from './components/InputScreen';
 import { VideoPlayer } from './components/VideoPlayer';
 import { TranscriptView } from './components/TranscriptView';
 import { FavoritesModal, type FavoriteItem } from './components/FavoritesModal';
 import { ReviewView } from './components/ReviewView';
+import { StudyGuideModal } from './components/StudyGuideModal';
 import { ChannelVideoList } from './components/ChannelVideoList';
 import { Toaster } from './components/Toaster';
 import { WordPopover, type WordDefinition } from './components/WordPopover';
@@ -18,6 +19,7 @@ import { consumeSseStream, findActiveIndex, isUntranslated, loadTranslationMode,
 import { loadVocabLevel } from './lib/settings';
 import { getProgress, saveProgress } from './lib/progress';
 import { dueFavorites, loadReviewState, pruneReviewState, saveReviewState, type ReviewStateMap } from './lib/review';
+import type { StudyGuide } from './lib/studyGuide';
 import ReactMarkdown from 'react-markdown';
 
 interface TranscriptItem {
@@ -38,6 +40,9 @@ function App() {
   const [loadingState, setLoadingState] = useState<'processing' | 'loading' | 'asr' | null>(null);
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
   const [summary, setSummary] = useState<string>('');
+  const [studyGuide, setStudyGuide] = useState<StudyGuide | null>(null);
+  const [isStudyGuideOpen, setIsStudyGuideOpen] = useState(false);
+  const [isStudyGuideLoading, setIsStudyGuideLoading] = useState(false);
   const [metadata, setMetadata] = useState<any>(null);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
@@ -378,6 +383,7 @@ function App() {
             setTranscript(blocks);
             setMetadata(evt.data.metadata || null);
             setSummary('');
+            setStudyGuide(evt.data.studyGuide || null);
             setVideoId(evt.data.videoId || id);
             setCurrentTime(0);
             setLoadingState(null); // English is visible — drop the overlay
@@ -406,6 +412,12 @@ function App() {
             break;
           case 'summary':
             setSummary(evt.data.summary || '');
+            break;
+          case 'study_guide':
+            setStudyGuide(evt.data.studyGuide || null);
+            break;
+          case 'study_guide_error':
+            toast.info(evt.data.detail || '学习导读暂时不可用。');
             break;
           case 'error':
             throw new Error(evt.data.detail || '处理失败，请重试。');
@@ -441,6 +453,7 @@ function App() {
         const data = await cacheResponse.json();
         setTranscript(data.transcript);
         setSummary(data.summary || '');
+        setStudyGuide(data.study_guide || null);
         setMetadata({ ...data.metadata, is_local_subtitle: true });
         setVideoId(data.videoId);
         setCurrentTime(0);
@@ -458,6 +471,7 @@ function App() {
         const data = await response.json();
         setTranscript(data.transcript);
         setSummary(data.summary || '');
+        setStudyGuide(data.study_guide || null);
         setMetadata({ ...data.metadata, is_local_subtitle: true });
         setVideoId(data.videoId);
         setCurrentTime(0);
@@ -480,6 +494,7 @@ function App() {
       const data = await response.json();
       setTranscript(data.transcript);
       setSummary(data.summary || '');
+      setStudyGuide(data.study_guide || null);
       setMetadata(data.metadata || null);
       setVideoId(data.videoId);
       setCurrentTime(0);
@@ -494,6 +509,41 @@ function App() {
   const handleTimeUpdate = useCallback((time: number) => {
     setCurrentTime(time);
   }, []);
+
+  const handleGenerateStudyGuide = async () => {
+    if (!videoId || isStudyGuideLoading) return;
+    setIsStudyGuideLoading(true);
+    try {
+      const response = await apiFetch(`/api/study-guide/${videoId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+      if (!response.ok) throw new Error(await describeApiError(response));
+      setStudyGuide(await response.json());
+      setIsStudyGuideOpen(true);
+    } catch (error) {
+      toast.error(await describeApiError(error));
+    } finally {
+      setIsStudyGuideLoading(false);
+    }
+  };
+
+  const handleToggleStudyGuideFavorite = useCallback((expression: StudyGuide['expressions'][number]) => {
+    const source = transcript.find(block => block.id === expression.source_id);
+    const id = `phrase-${expression.source_id}-${expression.phrase.toLowerCase().replace(/\s+/g, '-')}`;
+    setFavorites(prev => {
+      if (prev.some(favorite => favorite.id === id)) return prev.filter(favorite => favorite.id !== id);
+      return [...prev, {
+        id,
+        videoId,
+        start: source?.start || 0,
+        en_text: expression.phrase,
+        zh_text: expression.meaning,
+        context_en: source?.en_text || expression.example,
+        context_zh: source?.zh_text || '',
+        added_at: Date.now(),
+        highlights: [],
+        type: 'vocabulary' as const,
+      }];
+    });
+  }, [transcript, videoId]);
 
   // --- Playback progress: save (throttled) and resume ---
   const lastSavedTimeRef = useRef(0);
@@ -627,6 +677,8 @@ function App() {
     setVideoId('');
     setTranscript([]);
     setSummary('');
+    setStudyGuide(null);
+    setIsStudyGuideOpen(false);
     setMetadata(null);
     setCurrentTime(0);
     setSeekCommand(null);
@@ -805,15 +857,15 @@ function App() {
             <div className={`p-6 flex-1 min-h-0 bg-zinc-900/60 backdrop-blur-xl border-white/5 overflow-y-auto custom-scrollbar ${metadata?.is_local_subtitle ? 'border-none' : 'border-t hidden md:block'}`}>
               {summary ? (
                 <>
-                  <button
-                    onClick={() => setIsSummaryOpen(prev => !prev)}
-                    className="flex items-center justify-between w-full pb-2 cursor-pointer group"
-                  >
-                    <h2 className="text-[17px] font-semibold tracking-tight text-zinc-100 group-hover:text-purple-300 transition-colors">视频总结</h2>
-                    <ChevronDown
-                      className={`w-4 h-4 text-zinc-400 group-hover:text-purple-400 transition-transform duration-300 ${isSummaryOpen ? 'rotate-180' : ''}`}
-                    />
-                  </button>
+                  <div className="flex items-center justify-between pb-2">
+                    <button onClick={() => setIsSummaryOpen(prev => !prev)} className="flex items-center gap-2 cursor-pointer group">
+                      <h2 className="text-[17px] font-semibold tracking-tight text-zinc-100 group-hover:text-purple-300 transition-colors">视频总结</h2>
+                      <ChevronDown className={`w-4 h-4 text-zinc-400 group-hover:text-purple-400 transition-transform duration-300 ${isSummaryOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {!metadata?.is_local_subtitle && <button onClick={studyGuide ? () => setIsStudyGuideOpen(true) : handleGenerateStudyGuide} disabled={isStudyGuideLoading} className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-500 hover:bg-blue-500/15 disabled:opacity-50 transition-colors text-xs font-medium">
+                      <BookOpen className="w-3.5 h-3.5" /> {isStudyGuideLoading ? '生成中…' : studyGuide ? '学习导读' : '生成导读'}
+                    </button>}
+                  </div>
                   <div
                     className={`grid transition-[grid-template-rows,opacity] duration-300 ease-apple ${isSummaryOpen ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}`}
                   >
@@ -1132,6 +1184,16 @@ function App() {
         favorites={favorites}
         onRemoveFavorite={handleRemoveFavorite}
         onPlayFavorite={handlePlayFavorite}
+      />
+
+      <StudyGuideModal
+        isOpen={isStudyGuideOpen}
+        guide={studyGuide}
+        transcript={transcript}
+        favorites={favorites.map(favorite => favorite.id)}
+        onClose={() => setIsStudyGuideOpen(false)}
+        onSeek={time => setSeekCommand({ time, timestamp: Date.now() })}
+        onToggleExpressionFavorite={handleToggleStudyGuideFavorite}
       />
 
       <ChannelVideoList

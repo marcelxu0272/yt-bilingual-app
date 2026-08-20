@@ -33,6 +33,7 @@ from translate import (
     retranslate_marked_blocks,
     summarize_video_transcript,
 )
+from study_guide import generate_study_guide
 
 router = APIRouter()
 
@@ -41,6 +42,10 @@ class VideoRequest(BaseModel):
     url: str
     model: str | None = None
     vocab_level: str | None = None
+
+
+class StudyGuideRequest(BaseModel):
+    model: str | None = None
 
 
 # Metadata + transcript fetched during cost estimation, reused on confirm
@@ -263,6 +268,8 @@ async def process_video_stream(request: VideoRequest):
                     async for update in _stream_translate(transcript, pending, cached, cached_path):
                         yield _sse("batch", update)
                 yield _sse("summary", {"summary": cached.get("summary", "")})
+                if cached.get("study_guide"):
+                    yield _sse("study_guide", {"studyGuide": cached["study_guide"]})
                 yield _sse("done", {"cached": True})
                 return
 
@@ -351,6 +358,15 @@ async def process_video_stream(request: VideoRequest):
                 json.dump(payload, f, ensure_ascii=False, indent=2)
 
             yield _sse("summary", {"summary": summary_text})
+            yield _sse("stage", {"stage": "study_guide"})
+            try:
+                payload["study_guide"] = await generate_study_guide(transcript, summary_text, model)
+                with open(save_path, "w", encoding="utf-8") as f:
+                    json.dump(payload, f, ensure_ascii=False, indent=2)
+                yield _sse("study_guide", {"studyGuide": payload["study_guide"]})
+            except Exception as guide_error:
+                print(f"Study guide generation failed: {guide_error}")
+                yield _sse("study_guide_error", {"detail": "学习导读生成失败，可稍后重试。"})
             yield _sse("done", {"cached": False})
 
         except Exception as e:
@@ -362,6 +378,29 @@ async def process_video_stream(request: VideoRequest):
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@router.post("/api/study-guide/{video_id}")
+async def create_study_guide(video_id: str, request: StudyGuideRequest | None = None):
+    cache_path = find_history_file_for_video(video_id)
+    if not cache_path:
+        raise HTTPException(status_code=404, detail="找不到该视频的历史记录。")
+    try:
+        with open(cache_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        raise HTTPException(status_code=404, detail="历史记录无法读取。")
+    if data.get("study_guide"):
+        return data["study_guide"]
+    try:
+        guide = await generate_study_guide(data.get("transcript", []), data.get("summary", ""), resolve_model(request.model if request else None))
+    except Exception as e:
+        print(f"Study guide generation failed for {video_id}: {e}")
+        raise HTTPException(status_code=502, detail="学习导读生成失败，请稍后重试。")
+    data["study_guide"] = guide
+    with open(cache_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    return guide
 
 
 @router.get("/api/history")

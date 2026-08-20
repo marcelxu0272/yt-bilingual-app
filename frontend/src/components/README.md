@@ -17,6 +17,7 @@
 | `SentenceText.tsx` | 句子精背 | seg 渲染：四色语块 + ruby 注音 + 逐词可点 |
 | `FavoritesModal.tsx` | 全局 | 收藏夹：分组、迷你播放器、**Anki/CSV 导出** |
 | `ReviewView.tsx` | 复习页 | 收藏句子/生词的揭示、朗读、回到原文和间隔复习反馈 |
+| `StudyGuideModal.tsx` | 学习页 | 视频导读：概览、章节跳转、重点表达收藏与理解测验 |
 | `ModelSelectionModal.tsx` | 首页流程 | 处理前选 DeepSeek 模型 + 费用预估 |
 | `ChannelVideoList.tsx` | 全局 | 某频道的本地历史视频列表 |
 | `ShowBrowser.tsx` | 首页 | 本地剧集浏览：剧→季→集 |
