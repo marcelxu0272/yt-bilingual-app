@@ -895,7 +895,12 @@ function App() {
                 </>
               ) : (
                 <>
-                  <h2 className="text-[17px] font-semibold tracking-tight text-zinc-100 mb-2 pb-2">使用提示</h2>
+                  <div className="flex items-center justify-between mb-2 pb-2">
+                    <h2 className="text-[17px] font-semibold tracking-tight text-zinc-100">使用提示</h2>
+                    {videoId && !metadata?.is_local_subtitle && <button onClick={studyGuide ? () => setIsStudyGuideOpen(true) : handleGenerateStudyGuide} disabled={isStudyGuideLoading} className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-500 hover:bg-blue-500/15 disabled:opacity-50 transition-colors text-xs font-medium">
+                      <BookOpen className="w-3.5 h-3.5" /> {isStudyGuideLoading ? '生成中…' : studyGuide ? '学习导读' : '生成导读'}
+                    </button>}
+                  </div>
                   <ul className="text-zinc-400 space-y-2 list-disc list-inside">
                     <li>点击右侧任意句子，视频会跳转到对应时间点</li>
                     <li>点击句中任意单词可查看释义、发音，并一键加入生词本</li>

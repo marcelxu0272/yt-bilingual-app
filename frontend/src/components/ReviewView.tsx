@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ArrowLeft, Check, Eye, EyeOff, Play, Star, Volume2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { speak } from '../lib/tts';
@@ -23,9 +23,8 @@ const ratingLabels: Array<{ id: ReviewRating; label: string; hint: string; class
 export const ReviewView: React.FC<ReviewViewProps> = ({ favorites, reviewState, onStateChange, onBack, onPlayFavorite }) => {
     const queue = useMemo(() => dueFavorites(favorites, reviewState), [favorites, reviewState]);
     const card = queue[0];
-    const [revealed, setRevealed] = useState(false);
-
-    useEffect(() => setRevealed(false), [card?.id]);
+    const [revealedCardId, setRevealedCardId] = useState<string | null>(null);
+    const revealed = !!card && revealedCardId === card.id;
 
     const rate = (rating: ReviewRating) => {
         if (!card) return;
@@ -65,11 +64,10 @@ export const ReviewView: React.FC<ReviewViewProps> = ({ favorites, reviewState, 
                         </div>
 
                         <div className="glass-panel rounded-3xl p-7 md:p-10 min-h-[300px] flex flex-col justify-center">
-                            {card.type === 'vocabulary' && <p className="text-sm text-amber-500 mb-4">{card.zh_text}</p>}
-                            <p className="text-2xl md:text-3xl leading-relaxed tracking-tight text-zinc-100">{card.type === 'vocabulary' ? card.en_text : card.en_text}</p>
+                            <p className="text-2xl md:text-3xl leading-relaxed tracking-tight text-zinc-100">{card.en_text}</p>
                             {card.type === 'vocabulary' && card.context_en && <p className="mt-5 text-base leading-relaxed text-zinc-500">{card.context_en}</p>}
                             <div className="mt-8 flex items-center gap-2">
-                                <button onClick={() => speak(card.type === 'vocabulary' ? card.en_text : card.en_text)} className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-medium text-zinc-500 hover:text-zinc-200 hover:bg-white/5 transition-colors" title="朗读英文">
+                                <button onClick={() => speak(card.en_text)} className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-medium text-zinc-500 hover:text-zinc-200 hover:bg-white/5 transition-colors" title="朗读英文">
                                     <Volume2 className="w-3.5 h-3.5" /> 朗读
                                 </button>
                                 {card.videoId && !card.videoId.startsWith('sentence-pack-') && (
@@ -82,14 +80,17 @@ export const ReviewView: React.FC<ReviewViewProps> = ({ favorites, reviewState, 
 
                         <div className="mt-5 glass-card rounded-2xl p-5 min-h-[124px]">
                             {!revealed ? (
-                                <button onClick={() => setRevealed(true)} className="w-full h-full min-h-[84px] flex flex-col items-center justify-center gap-2 text-zinc-500 hover:text-zinc-200 transition-colors">
+                                <button onClick={() => setRevealedCardId(card.id)} className="w-full h-full min-h-[84px] flex flex-col items-center justify-center gap-2 text-zinc-500 hover:text-zinc-200 transition-colors">
                                     <Eye className="w-5 h-5" />
                                     <span className="text-sm">点击揭示答案</span>
                                 </button>
                             ) : (
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2 text-xs text-zinc-500"><EyeOff className="w-3.5 h-3.5" /> 中文释义</div>
-                                    <p className="text-base leading-relaxed text-zinc-300">{card.type === 'vocabulary' ? card.context_zh || card.zh_text : card.zh_text}</p>
+                                    <p className="text-base leading-relaxed text-zinc-300">{card.zh_text}</p>
+                                    {card.type === 'vocabulary' && card.context_zh && card.context_zh !== card.zh_text && (
+                                        <p className="text-sm leading-relaxed text-zinc-500">{card.context_zh}</p>
+                                    )}
                                 </div>
                             )}
                         </div>
