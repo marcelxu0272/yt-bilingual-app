@@ -105,6 +105,31 @@ async def save_favorites(request: dict):
 # --- Subscriptions persistence ---
 SUBS_FILE = os.path.join(HISTORY_DIR, "subscriptions.json")
 
+# Review scheduling is kept separate from favorites so Anki/CSV exports and
+# older favorite files remain backwards compatible.
+REVIEW_FILE = os.path.join(HISTORY_DIR, "review_state.json")
+
+
+@router.get("/api/review-state")
+def get_review_state():
+    if os.path.exists(REVIEW_FILE):
+        try:
+            with open(REVIEW_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            pass
+    return {}
+
+
+@router.put("/api/review-state")
+async def save_review_state(request: dict):
+    state = request.get("state", {})
+    if not isinstance(state, dict):
+        raise HTTPException(status_code=400, detail="复习状态格式无效。")
+    with open(REVIEW_FILE, "w", encoding="utf-8") as f:
+        json.dump(state, f, ensure_ascii=False, indent=2)
+    return {"status": "ok", "count": len(state)}
+
 
 @router.get("/api/subscriptions")
 def get_subscriptions():

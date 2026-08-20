@@ -7,6 +7,7 @@ import { InputScreen } from './components/InputScreen';
 import { VideoPlayer } from './components/VideoPlayer';
 import { TranscriptView } from './components/TranscriptView';
 import { FavoritesModal, type FavoriteItem } from './components/FavoritesModal';
+import { ReviewView } from './components/ReviewView';
 import { ChannelVideoList } from './components/ChannelVideoList';
 import { Toaster } from './components/Toaster';
 import { WordPopover, type WordDefinition } from './components/WordPopover';
@@ -16,6 +17,7 @@ import { toast, describeApiError } from './lib/toast';
 import { consumeSseStream, findActiveIndex, isUntranslated, loadTranslationMode, TRANSLATION_MODE_KEY, type TranslationMode } from './lib/transcript';
 import { loadVocabLevel } from './lib/settings';
 import { getProgress, saveProgress } from './lib/progress';
+import { dueFavorites, loadReviewState, pruneReviewState, saveReviewState, type ReviewStateMap } from './lib/review';
 import ReactMarkdown from 'react-markdown';
 
 interface TranscriptItem {
@@ -38,6 +40,8 @@ function App() {
   const [summary, setSummary] = useState<string>('');
   const [metadata, setMetadata] = useState<any>(null);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [reviewState, setReviewState] = useState<ReviewStateMap>({});
   const [isVocabOpen, setIsVocabOpen] = useState(false);
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
   const [pipWindow, setPipWindow] = useState<Window | null>(null);
@@ -195,7 +199,22 @@ function App() {
         if (saved) setSubscriptions(JSON.parse(saved));
         subsLoaded.current = true;
       });
+    apiFetch('/api/review-state')
+      .then(r => r.json())
+      .then(data => setReviewState(data && Object.keys(data).length ? data : loadReviewState()))
+      .catch(() => setReviewState(loadReviewState()));
   }, []);
+
+  const handleReviewStateChange = useCallback((next: ReviewStateMap) => {
+    const pruned = pruneReviewState(next, favorites);
+    setReviewState(pruned);
+    saveReviewState(pruned);
+    apiFetch('/api/review-state', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state: pruned }),
+    }).catch(() => {});
+  }, [favorites]);
 
   // Sync favorites to backend + localStorage whenever they change
   useEffect(() => {
@@ -301,6 +320,7 @@ function App() {
   };
 
   const handlePlayFavorite = (favVideoId: string, start: number) => {
+    setIsReviewOpen(false);
     if (favVideoId.length > 11) {
       // Local Subtitle: Extract showId, season, episode from string like "house-of-cards_S03E03"
       const match = favVideoId.match(/^(.+)_S(\d+)E(\d+)$/);
@@ -611,6 +631,7 @@ function App() {
     setCurrentTime(0);
     setSeekCommand(null);
     setSentenceLevel(null);
+    setIsReviewOpen(false);
   };
 
   // Star a sentence into the existing vocabulary book (exportable to Anki)
@@ -674,7 +695,23 @@ function App() {
 
       {/* Keyed motion.divs crossfade views on mount; no exit-gating so a
           backgrounded tab (throttled rAF) can never stall the switch. */}
-      {sentenceLevel != null ? (
+      {isReviewOpen ? (
+        <motion.div
+          key="review"
+          initial={{ opacity: 0, scale: 0.99, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
+          className="flex-1 min-h-0 flex flex-col overflow-hidden"
+        >
+          <ReviewView
+            favorites={favorites}
+            reviewState={reviewState}
+            onStateChange={handleReviewStateChange}
+            onBack={() => setIsReviewOpen(false)}
+            onPlayFavorite={handlePlayFavorite}
+          />
+        </motion.div>
+      ) : sentenceLevel != null ? (
         <motion.div
           key="sentences"
           initial={{ opacity: 0, scale: 0.99, y: 8 }}
@@ -708,6 +745,8 @@ function App() {
             subscriptions={subscriptions}
             onSelectChannel={setSelectedChannel}
             onUnsubscribe={(channelId) => setSubscriptions(prev => prev.filter(s => s.id !== channelId))}
+            onOpenReview={() => setIsReviewOpen(true)}
+            reviewDueCount={dueFavorites(favorites, reviewState).length}
           />
         </motion.div>
       ) : (

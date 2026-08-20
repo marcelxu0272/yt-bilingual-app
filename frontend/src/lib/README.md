@@ -10,6 +10,7 @@
 | `settings.ts` | 词汇水平（六站轴），含旧考试制存档迁移 |
 | `progress.ts` | 每视频播放进度记忆（续播 + "已学 N%"），上限 200 条 |
 | `exporter.ts` | 收藏导出：Anki TSV（front/back/tags）与完整 CSV |
+| `review.ts` | 应用内复习：到期队列、轻量调度、状态持久化与清理 |
 | `tts.ts` | 浏览器朗读（speechSynthesis，偏好英语音色） |
 | `toast.ts` | 轻提示总线 + `describeApiError`（把后端/网络错误转成可读中文） |
 

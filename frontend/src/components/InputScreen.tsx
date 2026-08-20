@@ -1,6 +1,6 @@
 import { apiFetch } from '../lib/api';
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2, Play, Youtube, Clock, Tv, Bell, ArrowRight } from 'lucide-react';
+import { Search, Loader2, Play, Youtube, Clock, Tv, Bell, ArrowRight, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import type { HistoryItem } from './ChannelVideoList';
 import { ModelSelectionModal } from './ModelSelectionModal';
@@ -23,6 +23,8 @@ interface InputScreenProps {
     subscriptions?: { id: string; name: string }[];
     onSelectChannel: (channelName: string) => void;
     onUnsubscribe?: (channelId: string) => void;
+    onOpenReview: () => void;
+    reviewDueCount: number;
 }
 
 const containerVariants = {
@@ -38,7 +40,7 @@ const itemVariants: Variants = {
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 340, damping: 30, mass: 0.9 } }
 };
 
-export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistory, onSelectEpisode, onSelectSentenceLevel, isLoading, loadingState, subscriptions = [], onSelectChannel }) => {
+export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistory, onSelectEpisode, onSelectSentenceLevel, isLoading, loadingState, subscriptions = [], onSelectChannel, onOpenReview, reviewDueCount }) => {
     const [url, setUrl] = useState('');
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [channelUpdates, setChannelUpdates] = useState<any[]>([]);
@@ -208,6 +210,19 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                 <motion.div variants={itemVariants}>
                     <SentencePacks onSelectLevel={onSelectSentenceLevel} />
                 </motion.div>
+
+                <motion.button variants={itemVariants} onClick={onOpenReview} className="w-full glass-panel rounded-3xl p-5 flex items-center justify-between text-left hover:bg-white/5 transition-colors group">
+                    <div className="flex items-center gap-4">
+                        <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                            <RotateCcw className="w-5 h-5 text-amber-500" />
+                        </div>
+                        <div>
+                            <p className="text-[17px] font-semibold tracking-tight text-zinc-100">今日复习</p>
+                            <p className="text-sm text-zinc-500 mt-1">{reviewDueCount > 0 ? `${reviewDueCount} 张收藏卡片等待复习` : '复习收藏的句子和生词，巩固记忆'}</p>
+                        </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-zinc-600 group-hover:text-zinc-200 transition-colors" />
+                </motion.button>
 
                 {/* Bento Grid */}
                 <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-8">
