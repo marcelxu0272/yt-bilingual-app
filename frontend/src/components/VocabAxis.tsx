@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { VOCAB_LEVELS, type VocabLevelId } from '../lib/settings';
 
 interface VocabAxisProps {
@@ -18,10 +18,6 @@ export const VocabAxis: React.FC<VocabAxisProps> = ({ value, onChange }) => {
 
     return (
         <div className="max-w-2xl mx-auto w-full select-none">
-            <p className="text-center text-xs font-medium text-zinc-500 mb-3">
-                How far has your English traveled?
-            </p>
-
             {/* Track */}
             <div className="relative h-6 mx-3">
                 {/* base rail */}
@@ -83,21 +79,6 @@ export const VocabAxis: React.FC<VocabAxisProps> = ({ value, onChange }) => {
                 {selected.label}
             </div>
 
-            {/* Tagline for the selected stop */}
-            <div className="h-5 mt-2 text-center overflow-hidden">
-                <AnimatePresence mode="wait">
-                    <motion.p
-                        key={selected.id}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.18, ease: 'easeOut' }}
-                        className="text-xs text-zinc-500"
-                    >
-                        {selected.tagline}
-                    </motion.p>
-                </AnimatePresence>
-            </div>
         </div>
     );
 };

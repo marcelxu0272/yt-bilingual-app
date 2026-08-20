@@ -19,8 +19,7 @@ export const SentencePacks: React.FC<SentencePacksProps> = ({ onSelectLevel }) =
         <TiltCard className="glass-panel rounded-3xl p-6 overflow-hidden">
             <div className="flex items-center gap-2 mb-5 text-zinc-100">
                 <GraduationCap className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-[17px] font-semibold tracking-tight">句子精背 · Sentence Packs</h3>
-                <span className="text-xs text-zinc-500 ml-1">背一批精选的地道句子</span>
+                <h3 className="text-[17px] font-semibold tracking-tight">句子精背</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                 {levels.map(lv => {
@@ -37,11 +36,10 @@ export const SentencePacks: React.FC<SentencePacksProps> = ({ onSelectLevel }) =
                                 <span className="text-sm font-medium text-zinc-200">{lv.title}</span>
                                 <ChevronRight className="w-4 h-4 text-zinc-600 group-hover/lv:text-zinc-400 transition-colors" />
                             </div>
-                            <p className="text-[11px] text-zinc-500 mt-0.5 truncate">{lv.subtitle}</p>
                             <div className="mt-2.5 h-1 rounded-full bg-zinc-800 overflow-hidden">
                                 <div className="h-full bg-gradient-to-r from-emerald-400 to-sky-400 rounded-full" style={{ width: `${pct}%` }} />
                             </div>
-                            <p className="text-[10px] text-zinc-600 mt-1 tabular-nums">{lv.count} 句 · 已背 {pct}%</p>
+                            <p className="text-[10px] text-zinc-600 mt-1 tabular-nums">{lv.count} 句 · {pct}%</p>
                         </motion.button>
                     );
                 })}

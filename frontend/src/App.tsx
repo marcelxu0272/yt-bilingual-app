@@ -726,7 +726,7 @@ function App() {
           className="inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-xl bg-zinc-800/60 hover:bg-zinc-700/60 border border-white/5 text-zinc-300 hover:text-zinc-100 transition-[background-color,color,border-color,transform] duration-200 ease-apple active:scale-[0.97]"
         >
           <Star className="w-4 h-4 text-amber-400 fill-amber-400/20" />
-          <span className="font-medium text-sm tabular-nums"><span className="hidden sm:inline">Favorites </span>({favorites.length})</span>
+          <span className="font-medium text-sm tabular-nums">{favorites.length}</span>
         </button>
         {videoId && transcript.length > 0 && (
           <button

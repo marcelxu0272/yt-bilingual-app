@@ -106,7 +106,7 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center p-5 md:p-8 pt-8 md:pt-20 overflow-y-auto custom-scrollbar relative bg-[#ede6d8]">
+        <div className="min-h-screen flex flex-col items-center p-5 md:p-8 pt-8 md:pt-12 overflow-y-auto custom-scrollbar relative bg-[#ede6d8]">
             {/* Quiet paper grain and ruled texture */}
             <AuroraBackground />
 
@@ -118,13 +118,13 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                     >
                         <Loader2 className="w-12 h-12 text-zinc-300 animate-spin mb-6" />
                         <h2 className="text-xl font-semibold tracking-tight text-zinc-100 mb-2">
-                            {loadingState === 'asr' ? 'Transcribing locally…' : loadingState === 'processing' ? 'Fetching subtitles…' : 'Loading…'}
+                            {loadingState === 'asr' ? '本地转写中' : loadingState === 'processing' ? '获取字幕中' : '加载中'}
                         </h2>
                         {loadingState === 'processing' && (
-                            <p className="text-zinc-400">English appears first — translations stream in while you watch</p>
+                            <p className="text-zinc-400">英文字幕会先显示</p>
                         )}
                         {loadingState === 'asr' && (
-                            <p className="text-zinc-400">No captions on this video — transcribing the audio with local Whisper (first run downloads the model, hang tight)</p>
+                            <p className="text-zinc-400">首次使用需要下载转写模型</p>
                         )}
                     </motion.div>
                 )}
@@ -135,8 +135,7 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                         className="fixed inset-0 z-50 bg-zinc-950/70 backdrop-blur-md flex flex-col items-center justify-center"
                     >
                         <Loader2 className="w-12 h-12 text-zinc-300 animate-spin mb-6" />
-                        <h2 className="text-xl font-semibold tracking-tight text-zinc-100 mb-2">Analyzing video…</h2>
-                        <p className="text-zinc-400">Counting words and estimating processing cost</p>
+                        <h2 className="text-xl font-semibold tracking-tight text-zinc-100">分析视频中</h2>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -149,25 +148,11 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
             />
 
             <motion.div 
-                className="max-w-5xl w-full space-y-12 shrink-0 z-10"
+                className="max-w-5xl w-full space-y-8 shrink-0 z-10"
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
             >
-                {/* Hero Section */}
-                <motion.div variants={itemVariants} className="text-center mt-6 md:mt-12 mb-8">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full glass-card text-xs font-medium text-zinc-300">
-                        <span className="flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                        Lingua Nova Engine
-                    </div>
-                    <h2 lang="en" className="hero-shimmer text-5xl md:text-6xl font-semibold tracking-[-0.022em] mb-4 text-balance">
-                        Watch YouTube. Learn English.
-                    </h2>
-                    <p lang="en" className="text-lg text-zinc-400 font-normal leading-relaxed max-w-2xl mx-auto text-balance">
-                        Paste a link — get synced bilingual subtitles, vocabulary picked for your level, and an AI summary. Instantly.
-                    </p>
-                </motion.div>
-
                 {/* Search Bar - Floating Arc Style */}
                 <motion.form variants={itemVariants} className="max-w-3xl mx-auto w-full relative" onSubmit={handleSubmit}>
                     <div className="relative group">
@@ -183,7 +168,7 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                                 disabled={isLoading}
                                 required
                                 className="min-w-0 w-full bg-transparent border-none outline-none text-zinc-100 placeholder-zinc-500 px-3 md:px-4 py-3 text-base md:text-lg"
-                                placeholder="YouTube link…"
+                                placeholder="粘贴 YouTube 链接"
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                             />
@@ -192,9 +177,7 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                                 disabled={isLoading || !url.trim()}
                                 className="inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0 h-12 px-4 md:px-6 rounded-full bg-zinc-100 text-zinc-900 text-sm font-semibold hover:bg-white active:scale-[0.98] transition-[background-color,transform,opacity] duration-200 ease-apple disabled:opacity-50"
                             >
-                                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                                    <><span className="sm:hidden">Start</span><span className="hidden sm:inline">Start Learning</span></>
-                                )}
+                                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : '开始'}
                                 {!isLoading && <ArrowRight className="w-4 h-4" />}
                             </button>
                         </div>
@@ -211,42 +194,36 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                     <SentencePacks onSelectLevel={onSelectSentenceLevel} />
                 </motion.div>
 
-                <motion.button variants={itemVariants} onClick={onOpenReview} className="w-full glass-panel rounded-3xl p-5 flex items-center justify-between text-left hover:bg-white/5 transition-colors group">
+                <motion.button variants={itemVariants} onClick={onOpenReview} className="w-full glass-panel rounded-3xl p-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors group">
                     <div className="flex items-center gap-4">
                         <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                             <RotateCcw className="w-5 h-5 text-amber-500" />
                         </div>
-                        <div>
-                            <p className="text-[17px] font-semibold tracking-tight text-zinc-100">今日复习</p>
-                            <p className="text-sm text-zinc-500 mt-1">{reviewDueCount > 0 ? `${reviewDueCount} 张收藏卡片等待复习` : '复习收藏的句子和生词，巩固记忆'}</p>
-                        </div>
+                        <p className="text-[17px] font-semibold tracking-tight text-zinc-100">今日复习</p>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-zinc-600 group-hover:text-zinc-200 transition-colors" />
+                    <div className="flex items-center gap-3">
+                        <span className="text-sm text-zinc-500 tabular-nums">{reviewDueCount > 0 ? `${reviewDueCount} 张` : '已完成'}</span>
+                        <ArrowRight className="w-5 h-5 text-zinc-600 group-hover:text-zinc-200 transition-colors" />
+                    </div>
                 </motion.button>
 
                 {/* Bento Grid */}
-                <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-8">
+                <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-2">
                     
                     {/* Left Column: Recent Learning */}
                     <div className="md:col-span-7 flex flex-col gap-6">
                         {/* History Card */}
                         <TiltCard className="glass-panel rounded-3xl p-6 h-full overflow-hidden group">
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-2 mb-6 text-zinc-100">
                                 <div className="flex items-center gap-2 text-zinc-100">
                                     <Clock className="w-5 h-5" />
-                                    <h3 className="text-[17px] font-semibold tracking-tight">Continue Learning</h3>
-                                </div>
-                                <div className="flex gap-1">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-600"></div>
-                                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-600"></div>
-                                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-600"></div>
+                                    <h3 className="text-[17px] font-semibold tracking-tight">最近学习</h3>
                                 </div>
                             </div>
 
                             {history.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-16 text-center">
-                                    <Clock className="w-10 h-10 text-zinc-700 mb-3" />
-                                    <p className="text-sm font-medium text-zinc-400">Nothing here yet — paste a link above to begin</p>
+                                <div className="flex items-center justify-center py-12 text-center">
+                                    <p className="text-sm text-zinc-500">暂无记录</p>
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-4">
@@ -278,11 +255,11 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                                                 )}
                                             </div>
                                             <div className="flex flex-col overflow-hidden">
-                                                <h4 className="text-zinc-200 font-medium truncate text-sm mb-1">{item.metadata?.title || 'Unknown Video'}</h4>
+                                                <h4 className="text-zinc-200 font-medium truncate text-sm mb-1">{item.metadata?.title || '本地视频'}</h4>
                                                 <p className="text-zinc-500 text-xs flex items-center gap-1">
-                                                    <Youtube className="w-3 h-3" /> {item.metadata?.channel || 'Local File'}
+                                                    <Youtube className="w-3 h-3" /> {item.metadata?.channel || '本地文件'}
                                                     {item.videoId && progressPercent(item.videoId) !== null && (
-                                                        <span className="ml-1 text-emerald-500/90">· {progressPercent(item.videoId)}% watched</span>
+                                                        <span className="ml-1 text-emerald-500/90">· {progressPercent(item.videoId)}%</span>
                                                     )}
                                                 </p>
                                             </div>
@@ -296,7 +273,7 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                         <TiltCard className="glass-panel rounded-3xl p-6 overflow-hidden">
                              <div className="flex items-center gap-2 mb-6 text-zinc-100">
                                 <Tv className="w-5 h-5 text-blue-400" />
-                                <h3 className="text-[17px] font-semibold tracking-tight">Local Shows</h3>
+                                <h3 className="text-[17px] font-semibold tracking-tight">本地剧集</h3>
                             </div>
                             <ShowBrowser onSelectEpisode={onSelectEpisode} isLoading={!!isLoading} />
                         </TiltCard>
@@ -310,7 +287,7 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                             <TiltCard className="glass-panel rounded-3xl p-6">
                                 <div className="flex items-center gap-2 mb-6 text-zinc-100">
                                     <Youtube className="w-5 h-5 text-red-500" />
-                                    <h3 className="text-[17px] font-semibold tracking-tight">Subscriptions</h3>
+                                    <h3 className="text-[17px] font-semibold tracking-tight">订阅</h3>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {subscriptions.slice(0, 6).map(sub => (
@@ -332,13 +309,13 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                         <TiltCard className="glass-panel rounded-3xl p-6 flex-1 flex flex-col">
                             <div className="flex items-center gap-2 mb-6 text-zinc-100">
                                 <Bell className="w-5 h-5 text-amber-400" />
-                                <h3 className="text-[17px] font-semibold tracking-tight">Latest Videos</h3>
+                                <h3 className="text-[17px] font-semibold tracking-tight">最近更新</h3>
                             </div>
                             
                             <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
                                 {channelUpdates.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center py-16 text-center">
-                                        <p className="text-sm font-medium text-zinc-400">No new uploads yet</p>
+                                    <div className="flex items-center justify-center py-12 text-center">
+                                        <p className="text-sm text-zinc-500">暂无更新</p>
                                     </div>
                                 ) : (
                                     channelUpdates.map((update, idx) => (
