@@ -6,8 +6,6 @@ import type { HistoryItem } from './ChannelVideoList';
 import { ModelSelectionModal } from './ModelSelectionModal';
 import type { EstimationData } from './ModelSelectionModal';
 import { ShowBrowser } from './ShowBrowser';
-import { loadVocabLevel, saveVocabLevel, type VocabLevelId } from '../lib/settings';
-import { VocabAxis } from './VocabAxis';
 import { TiltCard } from './TiltCard';
 import { AuroraBackground } from './AuroraBackground';
 import { SentencePacks } from './SentencePacks';
@@ -48,12 +46,6 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
     const [estimationData, setEstimationData] = useState<EstimationData | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [pendingUrl, setPendingUrl] = useState('');
-    const [vocabLevel, setVocabLevel] = useState<VocabLevelId>(loadVocabLevel);
-
-    const handleVocabLevelChange = (level: VocabLevelId) => {
-        setVocabLevel(level);
-        saveVocabLevel(level);
-    };
 
     useEffect(() => {
         apiFetch('/api/history')
@@ -183,11 +175,6 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                         </div>
                     </div>
                 </motion.form>
-
-                {/* Learner level: calibrates which words get highlighted */}
-                <motion.div variants={itemVariants} className="-mt-4">
-                    <VocabAxis value={vocabLevel} onChange={handleVocabLevelChange} />
-                </motion.div>
 
                 {/* Sentence Packs — the third learning mode */}
                 <motion.div variants={itemVariants}>

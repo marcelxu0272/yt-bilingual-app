@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { X, Volume2, Star, Loader2 } from 'lucide-react';
+import { BookOpen, Check, Loader2, Star, Volume2, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { apiFetch } from '../lib/api';
 import { describeApiError } from '../lib/toast';
 import { speak } from '../lib/tts';
+import type { WordKnowledge } from '../lib/vocabProfile';
 
 export interface WordDefinition {
     word: string;
@@ -23,12 +24,14 @@ interface WordPopoverProps {
     onClose: () => void;
     onToggleFavorite: (def: WordDefinition) => void;
     isFavorited: boolean;
+    knowledge: WordKnowledge;
+    onSetKnowledge: (word: string, status: WordKnowledge) => void;
 }
 
 const CARD_WIDTH = 320;
 const CARD_EST_HEIGHT = 240;
 
-export const WordPopover: React.FC<WordPopoverProps> = ({ word, context, x, y, onClose, onToggleFavorite, isFavorited }) => {
+export const WordPopover: React.FC<WordPopoverProps> = ({ word, context, x, y, onClose, onToggleFavorite, isFavorited, knowledge, onSetKnowledge }) => {
     const [definition, setDefinition] = useState<WordDefinition | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -81,6 +84,7 @@ export const WordPopover: React.FC<WordPopoverProps> = ({ word, context, x, y, o
                     <div className="flex items-center gap-1 shrink-0">
                         <button
                             onClick={() => speak(definition?.word || word)}
+                            aria-label="朗读单词"
                             className="p-1.5 rounded-lg text-zinc-500 hover:text-blue-400 hover:bg-white/5 transition-colors"
                             title="朗读"
                         >
@@ -89,13 +93,14 @@ export const WordPopover: React.FC<WordPopoverProps> = ({ word, context, x, y, o
                         {definition && (
                             <button
                                 onClick={() => onToggleFavorite(definition)}
+                                aria-label={isFavorited ? '移出生词本' : '加入生词本'}
                                 className={`p-1.5 rounded-lg transition-colors hover:bg-white/5 ${isFavorited ? 'text-amber-400' : 'text-zinc-500 hover:text-amber-400'}`}
                                 title={isFavorited ? '移出生词本' : '加入生词本'}
                             >
                                 <Star className="w-4 h-4" fill={isFavorited ? 'currentColor' : 'none'} />
                             </button>
                         )}
-                        <button onClick={onClose} className="p-1.5 rounded-full text-zinc-500 hover:text-zinc-300 hover:bg-white/5 transition-colors">
+                        <button onClick={onClose} aria-label="关闭释义" className="p-1.5 rounded-full text-zinc-500 hover:text-zinc-300 hover:bg-white/5 transition-colors">
                             <X className="w-4 h-4" />
                         </button>
                     </div>
@@ -127,6 +132,20 @@ export const WordPopover: React.FC<WordPopoverProps> = ({ word, context, x, y, o
                         {definition.lemma && definition.lemma.toLowerCase() !== (definition.word || word).toLowerCase() && (
                             <p className="text-[11px] text-zinc-600">原形：{definition.lemma}</p>
                         )}
+                        <div className="grid grid-cols-2 gap-2 border-t border-black/5 pt-3">
+                            <button
+                                onClick={() => onSetKnowledge(definition.word || word, knowledge === 'known' ? 'unset' : 'known')}
+                                className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl text-xs font-medium transition-colors ${knowledge === 'known' ? 'bg-emerald-100 text-emerald-800' : 'bg-black/5 text-zinc-600 hover:bg-emerald-50 hover:text-emerald-700'}`}
+                            >
+                                <Check className="h-3.5 w-3.5" /> 认识
+                            </button>
+                            <button
+                                onClick={() => onSetKnowledge(definition.word || word, knowledge === 'learning' ? 'unset' : 'learning')}
+                                className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl text-xs font-medium transition-colors ${knowledge === 'learning' ? 'bg-blue-100 text-blue-800' : 'bg-black/5 text-zinc-600 hover:bg-blue-50 hover:text-blue-700'}`}
+                            >
+                                <BookOpen className="h-3.5 w-3.5" /> 学习
+                            </button>
+                        </div>
                     </div>
                 )}
             </motion.div>

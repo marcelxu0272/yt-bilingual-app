@@ -1,7 +1,7 @@
 import { apiFetch } from './lib/api';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Star, ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Loader2, XCircle, Repeat, Keyboard, EyeOff, BookOpen } from 'lucide-react';
+import { Star, ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Loader2, XCircle, Repeat, Keyboard, EyeOff, BookOpen, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { InputScreen } from './components/InputScreen';
 import { VideoPlayer } from './components/VideoPlayer';
@@ -9,6 +9,7 @@ import { TranscriptView } from './components/TranscriptView';
 import { FavoritesModal, type FavoriteItem } from './components/FavoritesModal';
 import { ReviewView } from './components/ReviewView';
 import { StudyGuideModal } from './components/StudyGuideModal';
+import { SettingsModal } from './components/SettingsModal';
 import { ChannelVideoList } from './components/ChannelVideoList';
 import { Toaster } from './components/Toaster';
 import { WordPopover, type WordDefinition } from './components/WordPopover';
@@ -16,7 +17,16 @@ import { SentenceView, sentenceFavId } from './components/SentenceView';
 import { segToPlain, CHUNK_STYLE, type Sentence, type SegChunk } from './lib/sentences';
 import { toast, describeApiError } from './lib/toast';
 import { consumeSseStream, findActiveIndex, isUntranslated, loadTranslationMode, TRANSLATION_MODE_KEY, type TranslationMode } from './lib/transcript';
-import { loadVocabLevel } from './lib/settings';
+import {
+  getWordKnowledge,
+  loadVocabProfile,
+  nearestVocabLevel,
+  saveVocabProfile,
+  setWordKnowledge,
+  vocabProfileForRequest,
+  type VocabularyProfile,
+  type WordKnowledge,
+} from './lib/vocabProfile';
 import { getProgress, saveProgress } from './lib/progress';
 import { dueFavorites, loadReviewState, pruneReviewState, saveReviewState, type ReviewStateMap } from './lib/review';
 import type { StudyGuide } from './lib/studyGuide';
@@ -43,6 +53,8 @@ function App() {
   const [studyGuide, setStudyGuide] = useState<StudyGuide | null>(null);
   const [isStudyGuideOpen, setIsStudyGuideOpen] = useState(false);
   const [isStudyGuideLoading, setIsStudyGuideLoading] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [vocabProfile, setVocabProfileState] = useState<VocabularyProfile>(loadVocabProfile);
   const [metadata, setMetadata] = useState<any>(null);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
@@ -178,6 +190,32 @@ function App() {
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const favoritesLoaded = useRef(false);
 
+  const handleVocabProfileChange = useCallback((next: VocabularyProfile) => {
+    saveVocabProfile(next);
+    setVocabProfileState(next);
+  }, []);
+
+  const markWordKnowledge = useCallback((word: string, status: WordKnowledge) => {
+    setVocabProfileState(previous => {
+      const next = setWordKnowledge(previous, word, status);
+      saveVocabProfile(next);
+      return next;
+    });
+  }, []);
+
+  const rememberVocabularyFavorites = useCallback((items: FavoriteItem[]) => {
+    setVocabProfileState(previous => {
+      let next = previous;
+      items.forEach(item => {
+        if (item.type === 'vocabulary' && getWordKnowledge(next, item.en_text) === 'unset') {
+          next = setWordKnowledge(next, item.en_text, 'learning');
+        }
+      });
+      if (next !== previous) saveVocabProfile(next);
+      return next;
+    });
+  }, []);
+
   // Channel History Logic
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
 
@@ -189,11 +227,19 @@ function App() {
   useEffect(() => {
     apiFetch('/api/favorites')
       .then(r => r.json())
-      .then(data => { setFavorites(data); favoritesLoaded.current = true; })
+      .then((data: FavoriteItem[]) => {
+        setFavorites(data);
+        rememberVocabularyFavorites(data);
+        favoritesLoaded.current = true;
+      })
       .catch(() => {
         // Fallback to localStorage
         const saved = localStorage.getItem('yt_bilingual_favorites');
-        if (saved) setFavorites(JSON.parse(saved));
+        if (saved) {
+          const localFavorites = JSON.parse(saved) as FavoriteItem[];
+          setFavorites(localFavorites);
+          rememberVocabularyFavorites(localFavorites);
+        }
         favoritesLoaded.current = true;
       });
     apiFetch('/api/subscriptions')
@@ -208,9 +254,22 @@ function App() {
       .then(r => r.json())
       .then(data => setReviewState(data && Object.keys(data).length ? data : loadReviewState()))
       .catch(() => setReviewState(loadReviewState()));
-  }, []);
+  }, [rememberVocabularyFavorites]);
 
   const handleReviewStateChange = useCallback((next: ReviewStateMap) => {
+    const changed = Object.entries(next).find(([id, state]) => state.lastReviewedAt !== reviewState[id]?.lastReviewedAt);
+    if (changed) {
+      const [favoriteId, state] = changed;
+      const previous = reviewState[favoriteId];
+      const favorite = favorites.find(item => item.id === favoriteId && item.type === 'vocabulary');
+      if (favorite) {
+        if (state.lapses > (previous?.lapses ?? 0)) {
+          markWordKnowledge(favorite.en_text, 'learning');
+        } else if (state.repetitions >= 3 && state.intervalDays >= 3) {
+          markWordKnowledge(favorite.en_text, 'known');
+        }
+      }
+    }
     const pruned = pruneReviewState(next, favorites);
     setReviewState(pruned);
     saveReviewState(pruned);
@@ -219,7 +278,7 @@ function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ state: pruned }),
     }).catch(() => {});
-  }, [favorites]);
+  }, [favorites, markWordKnowledge, reviewState]);
 
   // Sync favorites to backend + localStorage whenever they change
   useEffect(() => {
@@ -277,6 +336,7 @@ function App() {
   const handleToggleVocabFavorite = (e: React.MouseEvent, item: any) => {
     e.stopPropagation();
     const id = `vocab-${videoId}-${item.en.replace(/\s+/g, '-')}`;
+    const isRemoving = favorites.some(favorite => favorite.id === id);
     setFavorites(prev => {
       const exists = prev.find(f => f.id === id);
       if (exists) {
@@ -296,6 +356,7 @@ function App() {
         }];
       }
     });
+    if (!isRemoving) markWordKnowledge(item.en, 'learning');
   };
 
   const handleRemoveFavorite = (id: string) => {
@@ -306,6 +367,7 @@ function App() {
   const handleToggleDictFavorite = (def: WordDefinition) => {
     if (!wordLookup) return;
     const id = `vocab-${videoId}-${def.word.replace(/\s+/g, '-')}`;
+    const isRemoving = favorites.some(favorite => favorite.id === id);
     setFavorites(prev => {
       const exists = prev.find(f => f.id === id);
       if (exists) return prev.filter(f => f.id !== id);
@@ -322,6 +384,7 @@ function App() {
         type: 'vocabulary' as const
       }];
     });
+    if (!isRemoving) markWordKnowledge(def.word, 'learning');
   };
 
   const handlePlayFavorite = (favVideoId: string, start: number) => {
@@ -368,7 +431,12 @@ function App() {
       const response = await apiFetch('/api/process-video-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, model, vocab_level: loadVocabLevel() }),
+        body: JSON.stringify({
+          url,
+          model,
+          vocab_level: vocabProfile.mode === 'manual' ? vocabProfile.manualLevel : nearestVocabLevel(vocabProfile.baselineBand),
+          vocab_profile: vocabProfileForRequest(vocabProfile),
+        }),
         signal: controller.signal,
       });
 
@@ -463,7 +531,13 @@ function App() {
         const response = await apiFetch('/api/process-subtitle', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ show_id: showId, season, episode }),
+          body: JSON.stringify({
+            show_id: showId,
+            season,
+            episode,
+            vocab_level: vocabProfile.mode === 'manual' ? vocabProfile.manualLevel : nearestVocabLevel(vocabProfile.baselineBand),
+            vocab_profile: vocabProfileForRequest(vocabProfile),
+          }),
         });
 
         if (!response.ok) throw new Error(await describeApiError(response));
@@ -721,6 +795,14 @@ function App() {
         </h1>
       </div>
       <div className="flex items-center gap-3">
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          aria-label="设置"
+          title="设置"
+          className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-zinc-800/60 hover:bg-zinc-700/60 border border-white/5 text-zinc-500 hover:text-zinc-100 transition-[background-color,color,border-color,transform] duration-200 ease-apple active:scale-[0.97]"
+        >
+          <Settings className="w-4 h-4" />
+        </button>
         <button
           onClick={() => setIsFavoritesOpen(true)}
           className="inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-xl bg-zinc-800/60 hover:bg-zinc-700/60 border border-white/5 text-zinc-300 hover:text-zinc-100 transition-[background-color,color,border-color,transform] duration-200 ease-apple active:scale-[0.97]"
@@ -1191,6 +1273,13 @@ function App() {
         onPlayFavorite={handlePlayFavorite}
       />
 
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        profile={vocabProfile}
+        onProfileChange={handleVocabProfileChange}
+      />
+
       <StudyGuideModal
         isOpen={isStudyGuideOpen}
         guide={studyGuide}
@@ -1219,6 +1308,8 @@ function App() {
             onClose={() => setWordLookup(null)}
             onToggleFavorite={handleToggleDictFavorite}
             isFavorited={favorites.some(f => f.id === `vocab-${videoId}-${wordLookup.word.replace(/\s+/g, '-')}`)}
+            knowledge={getWordKnowledge(vocabProfile, wordLookup.word)}
+            onSetKnowledge={markWordKnowledge}
           />
         )}
       </AnimatePresence>

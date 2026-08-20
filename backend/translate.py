@@ -8,6 +8,7 @@
 import asyncio
 import json
 import os
+import re
 
 from config import DEFAULT_MODEL, HISTORY_DIR, VOCAB_LEVELS
 from llm import chat_json, chat_text
@@ -15,6 +16,8 @@ from llm import chat_json, chat_text
 # Marker for blocks whose translation is missing/failed; such blocks are
 # re-translated automatically the next time the video is loaded.
 UNTRANSLATED_MARKER = "[未翻译]"
+PROFILE_LEVEL_IDS = ["liftoff", "orbit", "moonwalk", "interstellar", "deep-space", "supernova"]
+MAX_PROFILE_WORDS_IN_PROMPT = 120
 
 
 def _norm_id(v):
@@ -36,11 +39,62 @@ def needs_retranslation(zh_text: str) -> bool:
     )
 
 
-async def process_llm_batch(blocks: list, model: str = DEFAULT_MODEL, vocab_level: str | None = None) -> list:
+def _normalize_profile_word(value) -> str:
+    if not isinstance(value, str):
+        return ""
+    return re.sub(r"\s+", " ", re.sub(r"^[^a-z]+|[^a-z]+$", "", value.lower().strip()))[:80]
+
+
+def _profile_words(profile: dict | None, key: str) -> list[str]:
+    if not isinstance(profile, dict) or not isinstance(profile.get(key), list):
+        return []
+    words = []
+    for value in profile[key][-MAX_PROFILE_WORDS_IN_PROMPT:]:
+        normalized = _normalize_profile_word(value)
+        if normalized and normalized not in words:
+            words.append(normalized)
+    return words
+
+
+async def process_llm_batch(
+    blocks: list,
+    model: str = DEFAULT_MODEL,
+    vocab_level: str | None = None,
+    vocab_profile: dict | None = None,
+) -> list:
     """Use DeepSeek API to return Chinese translations and highlights."""
 
+    known_words = _profile_words(vocab_profile, "known_words")
+    learning_words = _profile_words(vocab_profile, "learning_words")
     level_instruction = ""
-    if vocab_level in VOCAB_LEVELS:
+    if isinstance(vocab_profile, dict) and vocab_profile.get("mode") == "auto":
+        try:
+            baseline_band = max(0, min(5, float(vocab_profile.get("baseline_band", 1))))
+        except (TypeError, ValueError):
+            baseline_band = 1
+        profile_level = PROFILE_LEVEL_IDS[round(baseline_band)]
+        try:
+            confidence = max(0, min(1, float(vocab_profile.get("confidence", 0.2) or 0.2)))
+        except (TypeError, ValueError):
+            confidence = 0.2
+        level_instruction = (
+            f"\n    The learner's estimated English level: {VOCAB_LEVELS[profile_level]}"
+            f" Profile confidence: {confidence:.0%}."
+            "\n    Only highlight words/phrases likely ABOVE this level."
+        )
+        if known_words:
+            level_instruction += (
+                "\n    NEVER highlight these learner-confirmed known words or phrases: "
+                + ", ".join(known_words)
+                + "."
+            )
+        if learning_words:
+            level_instruction += (
+                "\n    When contextually useful, PRIORITIZE these active learning words or phrases: "
+                + ", ".join(learning_words)
+                + "."
+            )
+    elif vocab_level in VOCAB_LEVELS:
         level_instruction = (
             f"\n    The learner's English level: {VOCAB_LEVELS[vocab_level]}"
             "\n    Only highlight words/phrases likely ABOVE this level; skip anything they already know."
@@ -98,13 +152,21 @@ async def process_llm_batch(blocks: list, model: str = DEFAULT_MODEL, vocab_leve
                 res = results_list[i] if i < len(results_list) and isinstance(results_list[i], dict) else {}
             else:
                 res = by_id.get(_norm_id(orig["id"]), {})
+            highlights = res.get("highlights") or []
+            if known_words:
+                known_set = set(known_words)
+                highlights = [
+                    highlight for highlight in highlights
+                    if isinstance(highlight, dict)
+                    and _normalize_profile_word(highlight.get("en_word")) not in known_set
+                ]
             processed_blocks.append({
                 "id": orig["id"],
                 "start": orig["start"],
                 "end": orig["end"],
                 "en_text": orig["text"],
                 "zh_text": res.get("zh_text") or UNTRANSLATED_MARKER,
-                "highlights": res.get("highlights") or []
+                "highlights": highlights
             })
 
         missing = sum(1 for b in processed_blocks if b["zh_text"] == UNTRANSLATED_MARKER)
@@ -221,7 +283,15 @@ async def retranslate_marked_blocks(data: dict, cache_path: str) -> dict:
     return data
 
 
-async def _stream_translate(transcript: list, indices: list, payload: dict, save_path: str, model: str = DEFAULT_MODEL, vocab_level: str | None = None):
+async def _stream_translate(
+    transcript: list,
+    indices: list,
+    payload: dict,
+    save_path: str,
+    model: str = DEFAULT_MODEL,
+    vocab_level: str | None = None,
+    vocab_profile: dict | None = None,
+):
     """Translate the given transcript indices batch by batch.
 
     Yields a dict per batch with the freshly translated blocks and overall
@@ -241,7 +311,12 @@ async def _stream_translate(transcript: list, indices: list, payload: dict, save
         } for i in batch_indices]
 
         try:
-            result = await process_llm_batch(batch_blocks, model=model, vocab_level=vocab_level)
+            result = await process_llm_batch(
+                batch_blocks,
+                model=model,
+                vocab_level=vocab_level,
+                vocab_profile=vocab_profile,
+            )
             for j, idx in enumerate(batch_indices):
                 if j < len(result):
                     transcript[idx] = result[j]

@@ -8,6 +8,7 @@
 | `transcript.ts` | 字幕核心逻辑：`findActiveIndex`（当前句判定，含 0.8s 前瞻）、SSE 流解析（`consumeSseStream`）、`[未翻译]` 标记判定、译文显示模式（全显/当前句/隐藏）持久化 |
 | `sentences.ts` | 句子精背：类型、拉取、四色语块配色、按册×天的背诵/复习进度持久化 |
 | `settings.ts` | 词汇水平（六站轴），含旧考试制存档迁移 |
+| `vocabProfile.ts` | 自动词汇画像：本地存储、自适应测评、认识/学习词表与请求摘要 |
 | `progress.ts` | 每视频播放进度记忆（续播 + "已学 N%"），上限 200 条 |
 | `exporter.ts` | 收藏导出：Anki TSV（front/back/tags）与完整 CSV |
 | `review.ts` | 应用内复习：到期队列、轻量调度、状态持久化与清理 |

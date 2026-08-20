@@ -42,6 +42,7 @@ class VideoRequest(BaseModel):
     url: str
     model: str | None = None
     vocab_level: str | None = None
+    vocab_profile: dict | None = None
 
 
 class StudyGuideRequest(BaseModel):
@@ -171,7 +172,12 @@ async def process_video(request: VideoRequest):
 
         for attempt in range(max_retries):
             try:
-                batch_result = await process_llm_batch(batch)
+                batch_result = await process_llm_batch(
+                    batch,
+                    model=resolve_model(request.model),
+                    vocab_level=request.vocab_level,
+                    vocab_profile=request.vocab_profile,
+                )
                 processed_blocks.extend(batch_result)
                 await asyncio.sleep(1)  # gentle pacing for provider rate limits
                 success = True
@@ -348,7 +354,15 @@ async def process_video_stream(request: VideoRequest):
                 "cached": False,
             })
 
-            async for update in _stream_translate(transcript, list(range(len(transcript))), payload, save_path, model=model, vocab_level=request.vocab_level):
+            async for update in _stream_translate(
+                transcript,
+                list(range(len(transcript))),
+                payload,
+                save_path,
+                model=model,
+                vocab_level=request.vocab_level,
+                vocab_profile=request.vocab_profile,
+            ):
                 yield _sse("batch", update)
 
             yield _sse("stage", {"stage": "summary"})

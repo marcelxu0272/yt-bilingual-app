@@ -102,6 +102,8 @@ class SubtitleRequest(BaseModel):
     show_id: str
     season: int
     episode: int
+    vocab_level: str | None = None
+    vocab_profile: dict | None = None
 
 
 @router.post("/api/process-subtitle")
@@ -166,7 +168,11 @@ async def process_subtitle(request: SubtitleRequest):
 
         for attempt in range(max_retries):
             try:
-                batch_result = await process_llm_batch(batch)
+                batch_result = await process_llm_batch(
+                    batch,
+                    vocab_level=request.vocab_level,
+                    vocab_profile=request.vocab_profile,
+                )
                 processed_blocks.extend(batch_result)
                 await asyncio.sleep(6)  # Longer delay between batches
                 success = True

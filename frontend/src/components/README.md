@@ -4,15 +4,17 @@
 
 | 组件 | 用在哪 | 职责 |
 |---|---|---|
-| `InputScreen.tsx` | 首页 | 搜索框、词汇轴、句子精背整宽入口卡、四张 bento 卡（最近学习/本地剧集/订阅/最新视频） |
+| `InputScreen.tsx` | 首页 | 搜索框、句子精背入口和最近学习/本地剧集/订阅内容卡 |
 | `AuroraBackground.tsx` | 首页 | 纸张背景：纸纤维噪点与轻微横线 |
 | `TiltCard.tsx` | 首页 | 纸面卡的轻微 3D 倾斜，减弱动态效果时禁用 |
-| `VocabAxis.tsx` | 首页 | 词汇水平轴（Liftoff→Supernova 六站，见 specs/004） |
+| `SettingsModal.tsx` | 全局 | 个人偏好设置，包含自动词汇画像、重测/重置和手动难度兜底 |
+| `VocabAssessment.tsx` | 设置弹窗 | 12 题自适应词义校准，生成词汇画像基线与可信度 |
+| `VocabAxis.tsx` | 设置弹窗 | 词汇水平轴（Liftoff→Supernova 六站，见 specs/004） |
 | `SentencePacks.tsx` | 首页 | 句子精背入口卡（5 册 + 进度） |
 | `VideoPlayer.tsx` | 学习页 | YouTube 播放器封装：seek/播放暂停命令、倍速、全屏 |
 | `TranscriptView.tsx` | 学习页 | 字幕列表：**Apple Music 式跟随滚动**、memo 化（只在换句时重渲染）、用户滚动时暂停跟随 |
 | `TranscriptBlock.tsx` | 学习页 | 单句：时间戳、译文显隐、收藏星标、听写模糊；**导出 `HighlightedText`/`ClickableWords`/`cn`** 供他处复用 |
-| `WordPopover.tsx` | 全局 | 点查词典卡：音标/释义/例句/TTS/入生词本 |
+| `WordPopover.tsx` | 全局 | 点查词典卡：音标/释义/例句/TTS/入生词本/认识与学习反馈 |
 | `SentenceView.tsx` | 句子精背 | 背诵视图：册切换、按天卡片、自测遮中文、复习打卡、搜索 |
 | `SentenceText.tsx` | 句子精背 | seg 渲染：四色语块 + ruby 注音 + 逐词可点 |
 | `FavoritesModal.tsx` | 全局 | 收藏夹：分组、迷你播放器、**Anki/CSV 导出** |

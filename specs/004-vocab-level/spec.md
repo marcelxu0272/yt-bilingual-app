@@ -1,11 +1,13 @@
 # 规格：生词水平轴
 
-**状态：** 已实现 ｜ **对应代码：** `frontend/src/components/VocabAxis.tsx`、`frontend/src/lib/settings.ts`、`backend/config.py`（`VOCAB_LEVELS`）、`backend/translate.py`（`process_llm_batch`）
+**状态：** 已实现 ｜ **对应代码：** `frontend/src/components/SettingsModal.tsx`、`frontend/src/components/VocabAxis.tsx`、`frontend/src/lib/settings.ts`、`backend/config.py`（`VOCAB_LEVELS`）、`backend/translate.py`（`process_llm_batch`）
 
 ---
 
 ## 目标
 让 AI 按**每个人的水平**高亮生词，而不是对四级和雅思 7 分的用户标同一批词。把"水平"做成一条直观、不吓人的轴。
+
+> 自动词汇画像成为默认方式后，本轴保留为高级设置中的手动兜底，见 [012](../012-adaptive-vocab-profile/spec.md)。
 
 ## 用户故事
 - 作为用户，我想设定自己的英语水平，让高亮只标**我大概率不认识**的词。
@@ -19,7 +21,7 @@
 - **必须**：词汇量数字只存在于后端 prompt 映射，不出现在界面。
 
 ## 验收标准
-- [ ] 首页有一条六站的轴，可点选；选中态有渐变填充与发光光点。
+- [ ] 设置弹窗有一条六站的轴，可点选；选中态有渐变填充与发光光点。
 - [ ] 每一站显示一句比喻文案，不显示词汇量数字。
 - [ ] 选定水平后处理新视频，高亮词量随水平升高而减少。
 - [ ] 刷新后水平保持；旧存档（如 `cet6`）能自动落到对应新站。

@@ -5,12 +5,12 @@ export const VOCAB_LEVEL_KEY = 'yt_bilingual_vocab_level';
 // Six levels along a vocabulary-size axis (~4k → 20k+ words), named after a
 // journey into space — numbers stay backstage, the metaphor does the talking.
 export const VOCAB_LEVELS = [
-    { id: 'liftoff', label: 'Liftoff', tagline: 'Just left the ground — everyday English is home base' },
-    { id: 'orbit', label: 'Orbit', tagline: 'Cruising steadily — subtitles are still good company' },
-    { id: 'moonwalk', label: 'Moonwalk', tagline: 'Confident steps on unfamiliar terrain' },
-    { id: 'interstellar', label: 'Interstellar', tagline: 'Long-haul listening, rarely needs a lifeline' },
-    { id: 'deep-space', label: 'Deep Space', tagline: 'Navigates almost anything without a map' },
-    { id: 'supernova', label: 'Supernova', tagline: 'Near-native — only the rarest sparks are new' },
+    { id: 'liftoff', label: 'Liftoff', tagline: '日常英语刚刚起步' },
+    { id: 'orbit', label: 'Orbit', tagline: '能稳定理解，字幕仍是好帮手' },
+    { id: 'moonwalk', label: 'Moonwalk', tagline: '能应对多数陌生表达' },
+    { id: 'interstellar', label: 'Interstellar', tagline: '长视频也很少需要帮助' },
+    { id: 'deep-space', label: 'Deep Space', tagline: '几乎能独立理解任何内容' },
+    { id: 'supernova', label: 'Supernova', tagline: '接近母语水平，只标记罕见词' },
 ] as const;
 
 export type VocabLevelId = typeof VOCAB_LEVELS[number]['id'];
