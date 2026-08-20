@@ -140,7 +140,7 @@ const TranscriptBlockInner: React.FC<TranscriptBlockProps> = ({ start, enText, z
         <div
             className={cn(
                 "relative px-4 py-3 rounded-2xl transition-colors duration-200 ease-apple cursor-pointer group",
-                !isActive && "hover:bg-zinc-800/40"
+                !isActive && "hover:bg-blue-500/10"
             )}
         >
             {isActive && (
