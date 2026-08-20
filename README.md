@@ -93,6 +93,22 @@ cp .env.example .env             # 填入你的 DEEPSEEK_API_KEY
 ./start_app.command              # macOS 一键启动（或手动起两个服务，见下）
 ```
 
+Windows 11 请在 PowerShell 中运行：
+
+```powershell
+git clone https://github.com/huthvincent/yt-bilingual-app.git
+cd yt-bilingual-app
+
+.\setup.ps1                     # 安装前后端依赖并检查 .env
+.\start_app.ps1                 # 同时启动前后端，按 Ctrl+C 关闭
+```
+
+如果 PowerShell 阻止本地脚本执行，只为当前终端临时放行后再运行：
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+```
+
 <details>
 <summary>手动启动</summary>
 
@@ -102,6 +118,18 @@ cd backend && source venv/bin/activate && uvicorn main:app --port 8000
 
 # 终端 2 — 前端
 cd frontend && npm run dev
+```
+
+Windows PowerShell：
+
+```powershell
+# 终端 1：后端
+cd backend
+.\venv\Scripts\python.exe -m uvicorn main:app --port 8000
+
+# 终端 2：前端
+cd frontend
+npm run dev
 ```
 </details>
 
