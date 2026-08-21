@@ -7,6 +7,7 @@ export interface HistoryMetadata {
     channel: string;
     upload_date: string;
     thumbnail: string;
+    duration?: number;
     is_local_subtitle?: boolean;
 }
 
@@ -14,6 +15,7 @@ export interface HistoryItem {
     filename: string;
     videoId?: string;
     metadata: HistoryMetadata;
+    duration?: number;
 }
 
 interface ChannelVideoListProps {

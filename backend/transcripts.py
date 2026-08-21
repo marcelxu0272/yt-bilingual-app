@@ -167,7 +167,8 @@ def get_video_metadata(url: str):
             "channel": info.get('uploader', 'Unknown Channel'),
             "channel_url": info.get('channel_url', info.get('uploader_url', '')),
             "upload_date": info.get('upload_date', datetime.datetime.now().strftime("%Y%m%d")),
-            "thumbnail": info.get('thumbnail', '')
+            "thumbnail": info.get('thumbnail', ''),
+            "duration": info.get('duration')
         }
 
 

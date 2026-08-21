@@ -17,7 +17,29 @@ interface ChannelUpdate {
     title: string;
     channel: string;
     thumbnail?: string;
+    duration?: number;
 }
+
+const formatDuration = (seconds?: number) => {
+    if (!seconds || !Number.isFinite(seconds) || seconds <= 0) return null;
+    const totalSeconds = Math.round(seconds);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const remainingSeconds = totalSeconds % 60;
+    return hours > 0
+        ? `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+        : `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+const DurationBadge: React.FC<{ seconds?: number }> = ({ seconds }) => {
+    const label = formatDuration(seconds);
+    if (!label) return null;
+    return (
+        <span className="absolute bottom-1 right-1 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-medium leading-none tabular-nums text-white shadow-sm">
+            {label}
+        </span>
+    );
+};
 
 interface InputScreenProps {
     onSubmit: (url: string, model?: string) => void;
@@ -235,6 +257,7 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                                                 {percent !== null && (
                                                     <div className="absolute inset-x-0 bottom-0 h-1 bg-black/60"><div className="h-full bg-emerald-500" style={{ width: `${percent}%` }} /></div>
                                                 )}
+                                                <DurationBadge seconds={item.duration ?? item.metadata?.duration} />
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <h4 className="truncate text-sm font-medium text-zinc-200">{item.metadata?.title || '本地视频'}</h4>
@@ -281,8 +304,9 @@ export const InputScreen: React.FC<InputScreenProps> = ({ onSubmit, onLoadHistor
                                     onClick={() => handleInterceptSubmit(`https://youtube.com/watch?v=${update.videoId}`)}
                                     className="group flex w-full items-center gap-3 rounded-lg border border-white/5 bg-zinc-800/30 p-2.5 text-left transition-[background-color,border-color] hover:border-white/10 hover:bg-zinc-800/60"
                                 >
-                                    <div className="w-20 aspect-video shrink-0 overflow-hidden rounded-lg bg-zinc-800">
+                                    <div className="relative w-20 aspect-video shrink-0 overflow-hidden rounded-lg bg-zinc-800">
                                         {update.thumbnail && <img src={update.thumbnail} className="h-full w-full object-cover" loading="lazy" alt="" />}
+                                        <DurationBadge seconds={update.duration} />
                                     </div>
                                     <div className="min-w-0">
                                         <h4 className="line-clamp-2 text-sm font-medium text-zinc-300 transition-colors group-hover:text-zinc-100">{update.title}</h4>

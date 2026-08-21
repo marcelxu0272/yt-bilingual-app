@@ -448,10 +448,20 @@ def list_history():
                     with open(file_path, "r", encoding="utf-8") as file:
                         data = json.load(file)
                         mtime = os.path.getmtime(file_path)
+                        metadata = data.get("metadata", {})
+                        duration = metadata.get("duration")
+                        if not duration:
+                            transcript = data.get("transcript") or []
+                            if transcript:
+                                last_block = transcript[-1]
+                                duration = last_block.get("end")
+                                if duration is None:
+                                    duration = (last_block.get("start") or 0) + (last_block.get("duration") or 0)
                         files.append({
                             "filename": f,
                             "videoId": data.get("videoId"),
-                            "metadata": data.get("metadata", {}),
+                            "metadata": metadata,
+                            "duration": duration,
                             "mtime": mtime
                         })
                 except Exception as e:
@@ -539,7 +549,8 @@ def _fetch_channel_videos(channel_url: str) -> list:
                     "videoId": video_id,
                     "title": title,
                     "channel": channel_name,
-                    "thumbnail": f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+                    "thumbnail": f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg",
+                    "duration": entry.get("duration")
                 })
         _channel_cache[channel_url] = (time.time(), updates)
     except Exception as e:
